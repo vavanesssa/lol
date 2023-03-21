@@ -1,0 +1,40 @@
+{
+  "name": "likely_server",
+  "author": "Vanessa Depraute",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/livee/likely_server.git",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon index.js -L",
+    "deva": "nodemon app.js -L",
+    "devb": "nodemon server.js -L",
+    "start": "node index.js",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@sentry/node": "^7.30.0",
+    "@sentry/tracing": "^7.30.0",
+    "axios": "^1.3.4",
+    "cli-color": "^2.0.3",
+    "config": "^3.3.9",
+    "connection-string": "^4.3.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.2",
+    "eslint": "^8.36.0",
+    "express": "^4.18.1",
+    "fakerator": "^0.3.6",
+    "global": "^4.4.0",
+    "mongodb": "^4.13.0",
+    "mongoose": "^6.8.4",
+    "node-emoji": "^1.11.0",
+    "nodemon": "^2.0.21",
+    "pino": "^8.8.0",
+    "pino-http": "^8.3.1",
+    "pino-pretty": "^9.1.1",
+    "pm2": "^5.2.2",
+    "prettier": "^2.8.6",
+    "socket.io": "^4.5.2",
+    "uuid": "^9.0.0"
+  }
+}

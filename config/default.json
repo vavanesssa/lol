@@ -1,0 +1,13 @@
+{
+  "app": {
+    "broadcast_interval": 4000
+  },
+  "stats": {
+    "save_length": 100,
+    "save_wait": 20
+  },
+  "log": {
+    "disable": false,
+    "active_sessions_interval": 1000
+  }
+}

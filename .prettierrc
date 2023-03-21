@@ -1,0 +1,19 @@
+{
+  "semi": false,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "trailingComma": "es5",
+  "printWidth": 60,
+  "arrowParens": "always",
+  "tabWidth": 2,
+  "useTabs": false,
+  "endOfLine": "auto",
+  "overrides": [
+    {
+      "files": "*.jsx",
+      "options": {
+        "parser": "babel"
+      }
+    }
+  ]
+}
