@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { addPlayer, getPlayers, addLife } from './api';
+import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife } from './api';
 
 import socket from './socket';
 
@@ -8,40 +8,50 @@ const App = () => {
   const [ firstname, setFirstname ] = useState( '' );
   const [ lastname, setLastname ] = useState( '' );
   const [ id, setId ] = useState( '' );
-  const [ maximumLives, setMaximumLives ] = useState( 10 );
+  const [ maximumLives, setMaximumLives ] = useState( 0 );
 
   const fetchPlayers = async () => {
+    console.log( 'fetching players' )
     const initialPlayers = await getPlayers();
     setPlayers( initialPlayers );
   };
 
-  const fetchGameSettings = async () => {
-    const response = await fetch( "http://localhost:3001/getsettings" );
-    const settings = await response.json();
+  const fetchGameSettingsData = async () => {
+    console.log( 'fetching game settings' );
+    const settings = await fetchGameSettings();
     setMaximumLives( settings.maximumLives );
   };
 
-  const updateGameSettings = async () => {
-    const response = await fetch( "http://localhost:3001/updatesettings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify( { maximumLives } ),
-    } );
-    await response.json();
+  const updateGameSettingsData = async () => {
+    await updateGameSettings( maximumLives );
+  };
+
+  const resetLivesData = async () => {
+    const updatedPlayers = await resetLives( maximumLives );
+    setPlayers( updatedPlayers );
   };
 
   useEffect( () => {
     fetchPlayers();
-    fetchGameSettings();
+    fetchGameSettingsData();
   }, [] );
 
   useEffect( () => {
     socket.connect();
 
     socket.on( 'playerAdded', ( player ) => {
-      setPlayers( ( prevPlayers ) => [ ...prevPlayers, player ] );
+      setPlayers( ( prevPlayers ) => {
+        // Check if the player already exists in the players array
+        const existingPlayer = prevPlayers.find( ( prevPlayer ) => prevPlayer.id === player.id );
+
+        // If the player doesn't exist, add the new player to the array
+        if ( !existingPlayer ) {
+          return [ ...prevPlayers, player ];
+        }
+
+        // Otherwise, return the unmodified players array
+        return prevPlayers;
+      } );
     } );
 
     socket.on( 'playerRemoved', ( playerId ) => {
@@ -54,6 +64,14 @@ const App = () => {
       );
     } );
 
+    socket.on( 'updateSettings', () => {
+      fetchGameSettingsData();
+    } );
+
+    socket.on( 'playersReset', ( players ) => {
+      setPlayers( players );
+    } );
+
     return () => {
       socket.disconnect();
     };
@@ -61,25 +79,24 @@ const App = () => {
 
   const handleSubmit = async ( e ) => {
     e.preventDefault();
-    await addPlayer( firstname, lastname, id );
+    await addPlayer( firstname, lastname, id, maximumLives );
     setFirstname( '' );
     setLastname( '' );
     setId( '' );
   };
 
+  const handleRemovePlayer = async ( playerId ) => {
+    const removedPlayerId = await removePlayer( playerId );
+    socket.emit( 'clientPlayerRemoved', removedPlayerId );
+  };
+
   const handleRemoveLife = async ( playerId ) => {
-    const response = await fetch( 'http://localhost:3001/removelive', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify( { id: playerId } ),
-    } );
-    const updatedPlayer = await response.json();
+    const updatedPlayer = await removeLife( playerId );
     socket.emit( 'clientLivesUpdate', updatedPlayer );
   };
 
   const handleAddLife = async ( playerId ) => {
+    console.log( playerId )
     const updatedPlayer = await addLife( playerId );
     socket.emit( 'clientLivesUpdate', updatedPlayer );
   };
@@ -89,6 +106,8 @@ const App = () => {
       <div>
 
         <h2>Game Settings</h2>
+        <button onClick={ resetLivesData }>Reset Lives</button>
+
         <label>
           Maximum Lives:
           <input
@@ -98,7 +117,8 @@ const App = () => {
             onChange={ ( e ) => setMaximumLives( parseInt( e.target.value, 10 ) ) }
           />
         </label>
-        <button onClick={ updateGameSettings }>Update Maximum Lives</button>
+        <button onClick={ updateGameSettingsData }>Update Maximum Lives</button>
+
       </div>
       <h1>Add Player</h1>
       <form onSubmit={ handleSubmit }>
@@ -117,15 +137,26 @@ const App = () => {
       <ul>
         { players.map( ( player ) => (
           <li key={ player.id }>
+            <button onClick={ () => handleRemovePlayer( player.id ) }>🗑️</button>
+
             <button onClick={ () => handleRemoveLife( player.id ) }>-</button>
             <button onClick={ () => handleAddLife( player.id ) }>+</button>
-
-            { player.firstname } { player.lastname }{ ' ' }
-            { Array( player.lives )
-              .fill( '😂' )
-              .join( '' ) }
+            { player.firstname } { player.lastname }{ " " }
+            <span>
+              { Array( player.lives )
+                .fill( "😂" )
+                .join( "" ) }
+              <span style={ { opacity: 0.3 } }>
+                { maximumLives - player.lives > 0
+                  ? Array( maximumLives - player.lives )
+                    .fill( "😂" )
+                    .join( "" )
+                  : "" }
+              </span>
+            </span>
           </li>
         ) ) }
+
       </ul>
     </div>
   );

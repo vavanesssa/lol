@@ -69,9 +69,9 @@ app.get( '/getplayers/:playerid', async ( req, res ) => {
 } )
 // ADDPLAYER
 app.post( '/addplayer', async ( req, res ) => {
-  const { firstname, lastname } = req.body;
+  const { firstname, lastname, lives } = req.body;
   const id = uuidv4();
-  const newPlayer = new Player( { firstname, lastname, id, teamID: '', lives: 10 } );
+  const newPlayer = new Player( { firstname, lastname, id, teamID: '', lives: lives } );
   await newPlayer.save();
   io.emit( 'playerAdded', newPlayer );
   res.json( newPlayer );
@@ -155,4 +155,14 @@ app.post( "/updatesettings", async ( req, res ) => {
   settings.maximumLives = maximumLives;
   await settings.save();
   res.json( settings );
+  io.emit( "updateSettings" );
+} );
+
+// RESETLIVES
+app.post( '/resetlives', async ( req, res ) => {
+  const { maximumLives } = req.body;
+  await Player.updateMany( {}, { $set: { lives: maximumLives } } );
+  const players = await Player.find();
+  io.emit( 'playersReset', players );
+  res.json( players );
 } );
