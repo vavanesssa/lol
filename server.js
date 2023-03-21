@@ -6,8 +6,9 @@ const logger = require( './utils/log.js' )
 const app = express()
 const uuidv4 = require( 'uuid' ).v4;
 
-const MY_NAMESPACE = '1b671a64-40d5-491e-99b0-da01ff1f3341'
 const PORT = process.env.PORT || 3001
+
+// MongoDB connection
 const MONGODB_URI =
   'mongodb+srv://lol:lol@cluster0.e7mbqki.mongodb.net/?retryWrites=true&w=majority'
 mongoose.set( 'strictQuery', false )
@@ -32,9 +33,9 @@ const gameSettingsSchema = new mongoose.Schema( {
 } );
 
 const GameSettings = mongoose.model( "GameSettings", gameSettingsSchema );
-
 const Player = mongoose.model( 'Player', playerSchema )
 
+// App Middlewares
 app.use( cors() )
 app.use( express.json() )
 
@@ -42,6 +43,7 @@ const server = app.listen( PORT, () => {
   logger( `Server running on port ${PORT}` )
 } )
 
+//Socket Init
 const io = new Server( server, {
   cors: {
     origin: '*',
@@ -55,114 +57,171 @@ io.on( 'connection', ( socket ) => {
   } )
 } )
 
-//GET
+// API
 app.get( '/getplayers', async ( req, res ) => {
-  const players = await Player.find()
-  res.json( players )
-} )
-//GET/PLAYERID
-app.get( '/getplayers/:playerid', async ( req, res ) => {
-  const player = await Player.findOne( {
-    id: req.params.playerid,
-  } )
-  res.json( player )
-} )
-// ADDPLAYER
-app.post( '/addplayer', async ( req, res ) => {
-  const { firstname, lastname, lives } = req.body;
-  const id = uuidv4();
-  const newPlayer = new Player( { firstname, lastname, id, teamID: '', lives: lives } );
-  await newPlayer.save();
-  io.emit( 'playerAdded', newPlayer );
-  res.json( newPlayer );
+  try {
+    const players = await Player.find();
+    res.json( players );
+    logger( ` GET / getplayers - Retrieved ${players.length} players ` );
+  } catch ( err ) {
+    logger( `Error: ${err} ` );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
 } );
 
-//EDITPLAYER
+app.get( '/getplayers/:playerid', async ( req, res ) => {
+  logger( `GET /getplayers/${req.params.playerid}` );
+  try {
+    const player = await Player.findOne( {
+      id: req.params.playerid,
+    } );
+    res.json( player );
+  } catch ( err ) {
+    logger( err );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
+app.post( '/addplayer', async ( req, res ) => {
+  const { firstname, lastname, lives } = req.body;
+  try {
+    const id = uuidv4();
+    const newPlayer = new Player( { firstname, lastname, id, teamID: '', lives: lives } );
+    await newPlayer.save();
+    io.emit( 'playerAdded', newPlayer );
+    res.json( newPlayer );
+    logger( `POST /addplayer - Added player: ${firstname} ${lastname}` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
 app.post( '/editplayer', async ( req, res ) => {
-  const { id, firstname, lastname } = req.body
-  const player = await Player.findOneAndUpdate(
-    { id },
-    { firstname, lastname },
-    { new: true }
-  )
-  io.emit( 'playerUpdated', player )
-  res.json( player )
-} )
+  const { id, firstname, lastname } = req.body;
+  try {
+    const player = await Player.findOneAndUpdate(
+      { id },
+      { firstname, lastname },
+      { new: true }
+    );
+    io.emit( 'playerUpdated', player );
+    res.json( player );
+    logger( `POST /editplayer - Updated player: ${firstname} ${lastname}` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
 
 app.post( '/removeplayer', async ( req, res ) => {
-  const { id } = req.body
-  const player = await Player.findOneAndDelete( { id } )
-  io.emit( 'playerRemoved', id )
-  res.json( player )
-} )
+  const { id } = req.body;
+  try {
+    const player = await Player.findOneAndDelete( { id } );
+    io.emit( 'playerRemoved', id );
+    res.json( player );
+    logger( `POST /removeplayer - Removed player: ${player.firstname} ${player.lastname}` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
 
 app.post( '/updateteam', async ( req, res ) => {
-  const { id, teamID } = req.body
-  const player = await Player.findOneAndUpdate(
-    { id },
-    { teamID },
-    { new: true }
-  )
-  io.emit( 'teamUpdated', player )
-  res.json( player )
-} )
+  logger( 'POST /updateteam' );
+  try {
+    const { id, teamID } = req.body;
+    const player = await Player.findOneAndUpdate(
+      { id },
+      { teamID },
+      { new: true }
+    );
+    io.emit( 'teamUpdated', player );
+    res.json( player );
+  } catch ( err ) {
+    logger( err );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
 
 app.post( '/removelive', async ( req, res ) => {
-  const { id } = req.body
-  const player = await Player.findOne( { id } )
-
-  if ( player.lives > 0 ) {
-    player.lives -= 1
-    await player.save()
-    io.emit( 'livesUpdated', player )
+  const { id } = req.body;
+  try {
+    const player = await Player.findOne( { id } );
+    if ( player.lives > 0 ) {
+      player.lives -= 1;
+      await player.save();
+      io.emit( 'livesUpdated', player );
+    }
+    res.json( player );
+    logger( `POST /removelive - Removed live from ${player.firstname} ${player.lastname}, lives left: ${player.lives}` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
-
-  res.json( player )
-} )
+} );
 
 app.post( "/addlive", async ( req, res ) => {
   const { id } = req.body;
-  const player = await Player.findOne( { id } );
-
-  const settings = await GameSettings.findOne();
-
-  if ( player.lives < settings.maximumLives ) {
-    player.lives += 1;
-    await player.save();
-    io.emit( "livesUpdated", player );
+  try {
+    const player = await Player.findOne( { id } );
+    const settings = await GameSettings.findOne();
+    if ( player.lives < settings.maximumLives ) {
+      player.lives += 1;
+      await player.save();
+      io.emit( "livesUpdated", player );
+    }
+    res.json( player );
+    logger( `POST / addlive - Added live to ${player.firstname} ${player.lastname}, lives left: ${player.lives} ` );
+  } catch ( err ) {
+    logger( `Error: ${err} ` );
+    res.status( 500 ).json( { error: "Internal Server Error" } );
   }
-
-  res.json( player );
 } );
 
 app.get( "/getsettings", async ( req, res ) => {
-  let settings = await GameSettings.findOne();
-  if ( !settings ) {
-    settings = new GameSettings();
-    await settings.save();
+  logger( "GET /getsettings" );
+  try {
+    let settings = await GameSettings.findOne();
+    if ( !settings ) {
+      settings = new GameSettings();
+      await settings.save();
+    }
+    res.json( settings );
+  } catch ( err ) {
+    logger( err );
+    res.status( 500 ).json( { error: "Internal Server Error" } );
   }
-  res.json( settings );
 } );
 
 app.post( "/updatesettings", async ( req, res ) => {
   const { maximumLives } = req.body;
-  let settings = await GameSettings.findOne();
-
-  if ( !settings ) {
-    settings = new GameSettings();
+  try {
+    let settings = await GameSettings.findOne();
+    if ( !settings ) {
+      settings = new GameSettings();
+    }
+    settings.maximumLives = maximumLives;
+    await settings.save();
+    res.json( settings );
+    io.emit( "updateSettings" );
+    logger( `POST /updatesettings - maximumLives set to ${maximumLives}` );
+  } catch ( err ) {
+    logger( `Error: ${err}` )
+    res.status( 500 ).json( { error: "Internal Server Error" } );
   }
-
-  settings.maximumLives = maximumLives;
-  await settings.save();
-  res.json( settings );
-  io.emit( "updateSettings" );
 } );
 
-// RESETLIVES
 app.post( '/resetlives', async ( req, res ) => {
-  const { maximumLives } = req.body;
-  await Player.updateMany( {}, { $set: { lives: maximumLives } } );
-  const players = await Player.find();
-  io.emit( 'playersReset', players );
-  res.json( players );
+  logger( 'POST /resetlives' );
+  try {
+    const { maximumLives } = req.body;
+    await Player.updateMany( {}, { $set: { lives: maximumLives } } );
+    const players = await Player.find();
+    io.emit( 'playersReset', players );
+    res.json( players );
+  } catch ( err ) {
+    logger( err );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
 } );

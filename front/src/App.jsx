@@ -9,6 +9,7 @@ const App = () => {
   const [ lastname, setLastname ] = useState( '' );
   const [ id, setId ] = useState( '' );
   const [ maximumLives, setMaximumLives ] = useState( 0 );
+  const [ searchQuery, setSearchQuery ] = useState( "" );
 
   const fetchPlayers = async () => {
     console.log( 'fetching players' )
@@ -30,6 +31,11 @@ const App = () => {
     const updatedPlayers = await resetLives( maximumLives );
     setPlayers( updatedPlayers );
   };
+
+  const filteredPlayers = players.filter( ( player ) => {
+    const fullName = `${player.firstname} ${player.lastname}`.toLowerCase();
+    return fullName.includes( searchQuery.toLowerCase() );
+  } );
 
   useEffect( () => {
     fetchPlayers();
@@ -147,8 +153,16 @@ const App = () => {
         <button type="submit">Add Player</button>
       </form>
       <h2>Players</h2>
+      <label>
+        Search:
+        <input
+          type="text"
+          value={ searchQuery }
+          onChange={ ( e ) => setSearchQuery( e.target.value ) }
+        />
+      </label>
       <ul>
-        { players.map( ( player ) => (
+        { filteredPlayers.map( ( player ) => (
           <li key={ player.id }>
             <button onClick={ () => handleRemovePlayer( player.id ) }>🗑️</button>
 

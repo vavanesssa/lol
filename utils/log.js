@@ -1,9 +1,16 @@
 const config = require('config')
 
-module.exports = function (logger) {
+function getFormattedDateTimeInFrench () {
+  return new Intl.DateTimeFormat( 'fr-FR', {
+    dateStyle: 'full',
+    timeStyle: 'medium',
+  } ).format( new Date() );
+}
+
+module.exports = function ( message ) {
   if (config.get('log.disable')) {
     return
   } else {
-    return console.log(logger)
+    return console.log( `[${getFormattedDateTimeInFrench()}] ${message}` )
   }
 }
