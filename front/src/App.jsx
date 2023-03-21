@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife } from './api';
-
+import Button from '@mui/material/Button';
 import socket from './socket';
+
+import { styled, alpha } from '@mui/material/styles';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import InputBase from '@mui/material/InputBase';
+import MenuIcon from '@mui/icons-material/Menu';
+import SearchIcon from '@mui/icons-material/Search';
+import style from "./styles.module.scss";
 
 const App = () => {
   const [ players, setPlayers ] = useState( [] );
@@ -120,12 +131,97 @@ const App = () => {
     socket.emit( "clientLivesUpdate", updatedPlayer );
   };
 
+  // MUI
+
+  const Search = styled( 'div' )( ( { theme } ) => ( {
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: alpha( theme.palette.common.white, 0.15 ),
+    '&:hover': {
+      backgroundColor: alpha( theme.palette.common.white, 0.25 ),
+    },
+    marginLeft: 0,
+    width: '100%',
+    [ theme.breakpoints.up( 'sm' ) ]: {
+      marginLeft: theme.spacing( 1 ),
+      width: 'auto',
+    },
+  } ) );
+
+  const SearchIconWrapper = styled( 'div' )( ( { theme } ) => ( {
+    padding: theme.spacing( 0, 2 ),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  } ) );
+
+  const StyledInputBase = styled( InputBase )( ( { theme } ) => ( {
+    color: 'inherit',
+    '& .MuiInputBase-input': {
+      padding: theme.spacing( 1, 1, 1, 0 ),
+      // vertical padding + font size from searchIcon
+      paddingLeft: `calc(1em + ${theme.spacing( 4 )})`,
+      transition: theme.transitions.create( 'width' ),
+      width: '100%',
+      [ theme.breakpoints.up( 'sm' ) ]: {
+        width: '12ch',
+        '&:focus': {
+          width: '20ch',
+        },
+      },
+    },
+  } ) );
+
+  const SearchAppBar = () => {
+    return (
+      <Box sx={ { flexGrow: 1 } }>
+        <AppBar position="fixed">
+          <Toolbar>
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="open drawer"
+              sx={ { mr: 2 } }
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography
+              variant="h6"
+              noWrap
+              component="div"
+              sx={ { flexGrow: 1, display: { xs: 'none', sm: 'block' } } }
+            >
+              <img src="logo.png" className={ style.logo } />
+            </Typography>
+            <Search>
+              <SearchIconWrapper>
+                <SearchIcon />
+              </SearchIconWrapper>
+              <StyledInputBase
+                value={ searchQuery }
+                onChange={ ( e ) => setSearchQuery( e.target.value ) }
+                placeholder="Rechercher..."
+                inputProps={ { 'aria-label': 'rechercher' } }
+              />
+            </Search>
+          </Toolbar>
+        </AppBar>
+      </Box>
+    );
+  }
+
   return (
     <div>
+      <SearchAppBar />
       <div>
-
+        <br /><br /><br /><br /><br /><br /><br />
         <h2>Game Settings</h2>
         <button onClick={ resetLivesData }>Reset Lives</button>
+        <Button onClick={ resetLivesData } variant="contained">Hello World</Button>
 
         <label>
           Maximum Lives:
@@ -155,19 +251,14 @@ const App = () => {
       <h2>Players</h2>
       <label>
         Search:
-        <input
-          type="text"
-          value={ searchQuery }
-          onChange={ ( e ) => setSearchQuery( e.target.value ) }
-        />
+
       </label>
       <ul>
         { filteredPlayers.map( ( player ) => (
           <li key={ player.id }>
-            <button onClick={ () => handleRemovePlayer( player.id ) }>🗑️</button>
-
-            <button onClick={ () => handleRemoveLife( player.id ) }>-</button>
-            <button onClick={ () => handleAddLife( player.id ) }>+</button>
+            <Button onClick={ () => handleRemovePlayer( player.id ) }>🗑️</Button>
+            <Button onClick={ () => handleRemoveLife( player.id ) }>-</Button>
+            <Button onClick={ () => handleAddLife( player.id ) }>+</Button>
             { player.firstname } { player.lastname }{ " " }
             <span>
               { Array( player.lives )
