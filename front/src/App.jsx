@@ -91,14 +91,27 @@ const App = () => {
   };
 
   const handleRemoveLife = async ( playerId ) => {
+    const player = players.find( ( p ) => p.id === playerId );
+
+    if ( player && player.lives <= 0 ) {
+      console.log( "min reached" );
+      return;
+    }
+
     const updatedPlayer = await removeLife( playerId );
-    socket.emit( 'clientLivesUpdate', updatedPlayer );
+    socket.emit( "clientLivesUpdate", updatedPlayer );
   };
 
   const handleAddLife = async ( playerId ) => {
-    console.log( playerId )
+    const player = players.find( ( p ) => p.id === playerId );
+
+    if ( player && player.lives >= maximumLives ) {
+      console.log( "max reached" );
+      return;
+    }
+
     const updatedPlayer = await addLife( playerId );
-    socket.emit( 'clientLivesUpdate', updatedPlayer );
+    socket.emit( "clientLivesUpdate", updatedPlayer );
   };
 
   return (
