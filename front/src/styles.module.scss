@@ -1,3 +1,26 @@
 .logo {
  height: 100px;
 }
+
+.list {
+list-style-type: none
+}
+
+.emoji {
+
+  opacity: 1;
+width: 35px;
+    height: 35px;
+    padding: 0px 10px 0 0;
+    filter: drop-shadow(2px 4px 6px #00000030);
+     transition: all 3s ease;
+}
+
+.emojiFaded {
+   transition: all 3s ease;
+  opacity: 0.3;
+}
+
+.dead {
+  opacity: 0.3;
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife } from './api';
 import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
 import socket from './socket';
 
 import { styled, alpha } from '@mui/material/styles';
@@ -12,6 +13,11 @@ import Typography from '@mui/material/Typography';
 import InputBase from '@mui/material/InputBase';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
+import TextField from '@mui/material/TextField';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import style from "./styles.module.scss";
 
 const App = () => {
@@ -219,9 +225,8 @@ const App = () => {
       <SearchAppBar />
       <div>
         <br /><br /><br /><br /><br /><br /><br />
-        <h2>Game Settings</h2>
-        <button onClick={ resetLivesData }>Reset Lives</button>
-        <Button onClick={ resetLivesData } variant="contained">Hello World</Button>
+
+        <Button onClick={ resetLivesData } variant="contained">Remise à zéro</Button>
 
         <label>
           Maximum Lives:
@@ -235,16 +240,11 @@ const App = () => {
         <button onClick={ updateGameSettingsData }>Update Maximum Lives</button>
 
       </div>
-      <h1>Add Player</h1>
+
       <form onSubmit={ handleSubmit }>
-        <label>
-          Firstname:
-          <input type="text" value={ firstname } onChange={ ( e ) => setFirstname( e.target.value ) } />
-        </label>
-        <label>
-          Lastname:
-          <input type="text" value={ lastname } onChange={ ( e ) => setLastname( e.target.value ) } />
-        </label>
+
+        <TextField value={ firstname } onChange={ ( e ) => setFirstname( e.target.value ) } id="outlined-basic" label="Prénom" variant="outlined" />
+        <TextField value={ lastname } onChange={ ( e ) => setLastname( e.target.value ) } id="outlined-basic" label="Nom" variant="outlined" />
 
         <button type="submit">Add Player</button>
       </form>
@@ -255,22 +255,37 @@ const App = () => {
       </label>
       <ul>
         { filteredPlayers.map( ( player ) => (
-          <li key={ player.id }>
-            <Button onClick={ () => handleRemovePlayer( player.id ) }>🗑️</Button>
-            <Button onClick={ () => handleRemoveLife( player.id ) }>-</Button>
-            <Button onClick={ () => handleAddLife( player.id ) }>+</Button>
-            { player.firstname } { player.lastname }{ " " }
+          <li className={ style.list } key={ player.id }>
+            <IconButton color="secondary" aria-label="add an alarm">
+              <EditIcon />
+            </IconButton>
+            <IconButton onClick={ () => handleRemovePlayer( player.id ) } color="secondary" aria-label="add an alarm">
+              <DeleteForeverIcon />
+            </IconButton>
+            <IconButton onClick={ () => handleRemoveLife( player.id ) } color="secondary" aria-label="add an alarm">
+              <RemoveIcon />
+            </IconButton>
+            <IconButton onClick={ () => handleAddLife( player.id ) } color="secondary" aria-label="add an alarm">
+              <AddIcon />
+            </IconButton>
+
             <span>
               { Array( player.lives )
-                .fill( "😂" )
-                .join( "" ) }
+                .fill()
+                .map( () => (
+                  <img src="laugh.png" alt="emoji" className={ style.emoji } />
+                ) ) }
               <span style={ { opacity: 0.3 } }>
                 { maximumLives - player.lives > 0
                   ? Array( maximumLives - player.lives )
-                    .fill( "😂" )
-                    .join( "" )
+                    .fill()
+                    .map( () => (
+                      <img src="laugh.png" alt="emoji" className={ style.emoji } />
+                    ) )
                   : "" }
               </span>
+              <span className={ player.lives == 0 ? style.dead : "" }>{ player.firstname } { player.lastname }</span>
+
             </span>
           </li>
         ) ) }
