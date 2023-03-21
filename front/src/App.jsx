@@ -8,30 +8,50 @@ const App = () => {
   const [ firstname, setFirstname ] = useState( '' );
   const [ lastname, setLastname ] = useState( '' );
   const [ id, setId ] = useState( '' );
+  const [ maximumLives, setMaximumLives ] = useState( 10 );
 
   const fetchPlayers = async () => {
     const initialPlayers = await getPlayers();
     setPlayers( initialPlayers );
   };
 
-  useEffect( () => {
+  const fetchGameSettings = async () => {
+    const response = await fetch( "http://localhost:3001/getsettings" );
+    const settings = await response.json();
+    setMaximumLives( settings.maximumLives );
+  };
 
+  const updateGameSettings = async () => {
+    const response = await fetch( "http://localhost:3001/updatesettings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify( { maximumLives } ),
+    } );
+    await response.json();
+  };
+
+  useEffect( () => {
     fetchPlayers();
+    fetchGameSettings();
   }, [] );
 
   useEffect( () => {
     socket.connect();
 
     socket.on( 'playerAdded', ( player ) => {
-      fetchPlayers();
+      setPlayers( ( prevPlayers ) => [ ...prevPlayers, player ] );
     } );
 
     socket.on( 'playerRemoved', ( playerId ) => {
-      fetchPlayers();
+      setPlayers( ( prevPlayers ) => prevPlayers.filter( ( player ) => player.id !== playerId ) );
     } );
 
     socket.on( 'livesUpdated', ( updatedPlayer ) => {
-      fetchPlayers();
+      setPlayers( ( prevPlayers ) =>
+        prevPlayers.map( ( player ) => ( player.id === updatedPlayer.id ? updatedPlayer : player ) ),
+      );
     } );
 
     return () => {
@@ -66,6 +86,20 @@ const App = () => {
 
   return (
     <div>
+      <div>
+
+        <h2>Game Settings</h2>
+        <label>
+          Maximum Lives:
+          <input
+            type="number"
+            min="1"
+            value={ maximumLives }
+            onChange={ ( e ) => setMaximumLives( parseInt( e.target.value, 10 ) ) }
+          />
+        </label>
+        <button onClick={ updateGameSettings }>Update Maximum Lives</button>
+      </div>
       <h1>Add Player</h1>
       <form onSubmit={ handleSubmit }>
         <label>

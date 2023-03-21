@@ -27,6 +27,12 @@ const playerSchema = new mongoose.Schema( {
   lives: { type: Number, default: 10 },
 } )
 
+const gameSettingsSchema = new mongoose.Schema( {
+  maximumLives: { type: Number, default: 10 },
+} );
+
+const GameSettings = mongoose.model( "GameSettings", gameSettingsSchema );
+
 const Player = mongoose.model( 'Player', playerSchema )
 
 app.use( cors() )
@@ -114,15 +120,39 @@ app.post( '/removelive', async ( req, res ) => {
   res.json( player )
 } )
 
-app.post( '/addlive', async ( req, res ) => {
+app.post( "/addlive", async ( req, res ) => {
   const { id } = req.body;
   const player = await Player.findOne( { id } );
 
-  player.lives += 1;
-  await player.save();
+  const settings = await GameSettings.findOne();
 
-  io.emit( 'livesUpdated', player );
+  if ( player.lives < settings.maximumLives ) {
+    player.lives += 1;
+    await player.save();
+    io.emit( "livesUpdated", player );
+  }
 
   res.json( player );
 } );
 
+app.get( "/getsettings", async ( req, res ) => {
+  let settings = await GameSettings.findOne();
+  if ( !settings ) {
+    settings = new GameSettings();
+    await settings.save();
+  }
+  res.json( settings );
+} );
+
+app.post( "/updatesettings", async ( req, res ) => {
+  const { maximumLives } = req.body;
+  let settings = await GameSettings.findOne();
+
+  if ( !settings ) {
+    settings = new GameSettings();
+  }
+
+  settings.maximumLives = maximumLives;
+  await settings.save();
+  res.json( settings );
+} );
