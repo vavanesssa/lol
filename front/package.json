@@ -24,6 +24,7 @@
     "react-dom": "^18.2.0",
     "sass": "^1.59.3",
     "socket.io-client": "^4.6.1",
+    "uuid": "^9.0.0",
     "vite-plugin-favicons-inject": "^2.2.0"
   },
   "devDependencies": {

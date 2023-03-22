@@ -8,4 +8,5 @@ dotenv.config();
 export default defineConfig({
   plugins: [ react(),
   vitePluginFaviconsInject( './src/assets/favicon.png' ), ],
+
 })

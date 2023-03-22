@@ -24,7 +24,12 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import { v4 as uuidv4 } from 'uuid';
 
+function UuidGenerator () {
+  const uuid = uuidv4();
+  return { uuid };
+}
 const App = () => {
   const [ players, setPlayers ] = useState( [] );
   const [ firstname, setFirstname ] = useState( '' );
@@ -74,6 +79,9 @@ const App = () => {
   useEffect( () => {
     fetchPlayers();
     fetchGameSettingsData();
+    setInterval( () => {
+      fetchPlayers()
+    }, 60000 );
   }, [] );
 
   useEffect( () => {
@@ -237,22 +245,22 @@ const App = () => {
             <span>
               { Array( player.lives )
                 .fill()
-                .map( () => (
-                  <img src="laugh.png" alt="emoji" className={ style.emoji } />
+                .map( ( _, index ) => (
+                  <img src="laugh.png" alt="emoji" className={ style.emoji } key={ index } />
                 ) ) }
               <span style={ { opacity: 0.3 } }>
                 { maximumLives - player.lives > 0
                   ? Array( maximumLives - player.lives )
                     .fill()
-                    .map( () => (
-                      <img src="laugh.png" alt="emoji" className={ style.emoji } />
+                    .map( ( _, index ) => (
+                      <img src="laugh.png" alt="emoji" className={ style.emoji } key={ index } />
                     ) )
                   : "" }
               </span>
 
               <span className={ player.lives == 0 ? style.dead : style.username }>{ player.firstname } { player.lastname }</span>
-
             </span>
+
           </li>
         ) ) }
 
