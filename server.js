@@ -51,6 +51,7 @@ const io = new Server( server, {
     origin: '*',
   },
 } )
+path: '/socket',
 
 io.on( 'connection', ( socket ) => {
   logger( 'Client connected' )
