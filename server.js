@@ -60,7 +60,7 @@ io.on( 'connection', ( socket ) => {
 } )
 
 // API
-app.get( '/getplayers', async ( req, res ) => {
+app.get( '/api/getplayers', async ( req, res ) => {
   try {
     const players = await Player.find();
     res.json( players );
@@ -71,7 +71,7 @@ app.get( '/getplayers', async ( req, res ) => {
   }
 } );
 
-app.get( '/getplayers/:playerid', async ( req, res ) => {
+app.get( '/api/getplayers/:playerid', async ( req, res ) => {
   logger( `GET /getplayers/${req.params.playerid}` );
   try {
     const player = await Player.findOne( {
@@ -84,7 +84,7 @@ app.get( '/getplayers/:playerid', async ( req, res ) => {
   }
 } );
 
-app.post( '/addplayer', async ( req, res ) => {
+app.post( '/api/addplayer', async ( req, res ) => {
   const { firstname, lastname, lives } = req.body;
   try {
     const id = uuidv4();
@@ -99,7 +99,7 @@ app.post( '/addplayer', async ( req, res ) => {
   }
 } );
 
-app.post( '/editplayer', async ( req, res ) => {
+app.post( '/api/editplayer', async ( req, res ) => {
   const { id, firstname, lastname } = req.body;
   try {
     const player = await Player.findOneAndUpdate(
@@ -116,7 +116,7 @@ app.post( '/editplayer', async ( req, res ) => {
   }
 } );
 
-app.post( '/removeplayer', async ( req, res ) => {
+app.post( '/api/removeplayer', async ( req, res ) => {
   const { id } = req.body;
   try {
     const player = await Player.findOneAndDelete( { id } );
@@ -129,7 +129,7 @@ app.post( '/removeplayer', async ( req, res ) => {
   }
 } );
 
-app.post( '/updateteam', async ( req, res ) => {
+app.post( '/api/updateteam', async ( req, res ) => {
   logger( 'POST /updateteam' );
   try {
     const { id, teamID } = req.body;
@@ -146,7 +146,7 @@ app.post( '/updateteam', async ( req, res ) => {
   }
 } );
 
-app.post( '/removelive', async ( req, res ) => {
+app.post( "/api/removelive", async ( req, res ) => {
   const { id } = req.body;
   try {
     const player = await Player.findOne( { id } );
@@ -163,7 +163,7 @@ app.post( '/removelive', async ( req, res ) => {
   }
 } );
 
-app.post( "/addlive", async ( req, res ) => {
+app.post( "/api/addlive", async ( req, res ) => {
   const { id } = req.body;
   try {
     const player = await Player.findOne( { id } );
@@ -181,7 +181,7 @@ app.post( "/addlive", async ( req, res ) => {
   }
 } );
 
-app.get( "/getsettings", async ( req, res ) => {
+app.get( "/api/getsettings", async ( req, res ) => {
   logger( "GET /getsettings" );
   try {
     let settings = await GameSettings.findOne();
@@ -196,7 +196,7 @@ app.get( "/getsettings", async ( req, res ) => {
   }
 } );
 
-app.post( "/updatesettings", async ( req, res ) => {
+app.post( "/api/updatesettings", async ( req, res ) => {
   const { maximumLives } = req.body;
   try {
     let settings = await GameSettings.findOne();
@@ -214,7 +214,7 @@ app.post( "/updatesettings", async ( req, res ) => {
   }
 } );
 
-app.post( '/resetlives', async ( req, res ) => {
+app.post( '/api/resetlives', async ( req, res ) => {
   logger( 'POST /resetlives' );
   try {
     const { maximumLives } = req.body;
@@ -228,6 +228,3 @@ app.post( '/resetlives', async ( req, res ) => {
   }
 } );
 
-app.get( '*', ( req, res ) => {
-  res.sendFile( path.join( __dirname, 'front', 'dist', 'index.html' ) );
-} );

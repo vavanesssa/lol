@@ -1,7 +1,6 @@
-let API_URL = 'http://localhost:3001';
-if ( import.meta.env.NODE_ENV === 'production' ) {
-  API_URL = 'https://mdr-qo9si.ondigitalocean.app/';
-}
+const API_URL = import.meta.env.VITE_API;
+
+console.log( "API_URL", API_URL );
 
 export async function getPlayers () {
   const response = await fetch( `${API_URL}/getplayers` );
