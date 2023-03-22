@@ -5,7 +5,7 @@ const { Server } = require( 'socket.io' )
 const logger = require( './utils/log.js' )
 const app = express()
 const uuidv4 = require( 'uuid' ).v4;
-
+const path = require( 'path' );
 const PORT = process.env.PORT || 3001
 
 // MongoDB connection
@@ -38,6 +38,14 @@ const Player = mongoose.model( 'Player', playerSchema )
 // App Middlewares
 app.use( cors() )
 app.use( express.json() )
+
+// Serve static files
+app.use( express.static( path.join( __dirname, 'front', 'dist' ) ) );
+
+// Serve index.html for any path that does not match a route
+app.use( ( req, res, next ) => {
+  res.sendFile( path.join( __dirname, 'front', 'dist', 'index.html' ) );
+} );
 
 const server = app.listen( PORT, () => {
   logger( `Server running on port ${PORT}` )

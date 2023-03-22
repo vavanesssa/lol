@@ -20,6 +20,16 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import style from "./styles.module.scss";
 
+const useSearchState = ( initialState = "" ) => {
+  const [ searchQuery, setSearchQuery ] = useState( initialState );
+  const handleChange = ( e ) => setSearchQuery( e.target.value );
+
+  return {
+    searchQuery,
+    handleChange,
+  };
+};
+
 const App = () => {
   const [ players, setPlayers ] = useState( [] );
   const [ firstname, setFirstname ] = useState( '' );
@@ -203,17 +213,7 @@ const App = () => {
             >
               <img src="logo.png" className={ style.logo } />
             </Typography>
-            <Search>
-              <SearchIconWrapper>
-                <SearchIcon />
-              </SearchIconWrapper>
-              <StyledInputBase
-                value={ searchQuery }
-                onChange={ ( e ) => setSearchQuery( e.target.value ) }
-                placeholder="Rechercher..."
-                inputProps={ { 'aria-label': 'rechercher' } }
-              />
-            </Search>
+
           </Toolbar>
         </AppBar>
       </Box>
@@ -250,7 +250,10 @@ const App = () => {
       </form>
       <h2>Players</h2>
       <label>
-        Search:
+
+        <TextField value={ searchQuery }
+          onChange={ ( e ) => setSearchQuery( e.target.value ) }
+          placeholder="Rechercher..." label="Rechercher" variant="outlined" />
 
       </label>
       <ul>
@@ -284,7 +287,8 @@ const App = () => {
                     ) )
                   : "" }
               </span>
-              <span className={ player.lives == 0 ? style.dead : "" }>{ player.firstname } { player.lastname }</span>
+
+              <span className={ player.lives == 0 ? style.dead : style.username }>{ player.firstname } { player.lastname }</span>
 
             </span>
           </li>

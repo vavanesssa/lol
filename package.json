@@ -6,10 +6,8 @@
   "repository": "https://github.com/livee/likely_server.git",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon index.js -L",
-    "deva": "nodemon app.js -L",
-    "devb": "nodemon server.js -L",
-    "start": "node index.js",
+    "dev": "nodemon server.js -L",
+    "start": "node server.js",
     "lint": "eslint ."
   },
   "dependencies": {
