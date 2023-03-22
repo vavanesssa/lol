@@ -1,4 +1,7 @@
-const API_URL = 'http://localhost:3001';
+let API_URL = 'http://localhost:3001';
+if ( import.meta.env.NODE_ENV === 'production' ) {
+  API_URL = 'https://mdr-qo9si.ondigitalocean.app/';
+}
 
 export async function getPlayers () {
   const response = await fetch( `${API_URL}/getplayers` );

@@ -39,13 +39,7 @@ const Player = mongoose.model( 'Player', playerSchema )
 app.use( cors() )
 app.use( express.json() )
 
-// Serve static files
 app.use( express.static( path.join( __dirname, 'front', 'dist' ) ) );
-
-// Serve index.html for any path that does not match a route
-app.use( ( req, res, next ) => {
-  res.sendFile( path.join( __dirname, 'front', 'dist', 'index.html' ) );
-} );
 
 const server = app.listen( PORT, () => {
   logger( `Server running on port ${PORT}` )
@@ -232,4 +226,8 @@ app.post( '/resetlives', async ( req, res ) => {
     logger( err );
     res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
+} );
+
+app.get( '*', ( req, res ) => {
+  res.sendFile( path.join( __dirname, 'front', 'dist', 'index.html' ) );
 } );
