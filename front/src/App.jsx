@@ -9,26 +9,20 @@ import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import InputBase from '@mui/material/InputBase';
-import MenuIcon from '@mui/icons-material/Menu';
-import SearchIcon from '@mui/icons-material/Search';
 import TextField from '@mui/material/TextField';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import style from "./styles.module.scss";
-
-const useSearchState = ( initialState = "" ) => {
-  const [ searchQuery, setSearchQuery ] = useState( initialState );
-  const handleChange = ( e ) => setSearchQuery( e.target.value );
-
-  return {
-    searchQuery,
-    handleChange,
-  };
-};
+import Slider from '@mui/material/Slider';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 
 const App = () => {
   const [ players, setPlayers ] = useState( [] );
@@ -37,6 +31,17 @@ const App = () => {
   const [ id, setId ] = useState( '' );
   const [ maximumLives, setMaximumLives ] = useState( 0 );
   const [ searchQuery, setSearchQuery ] = useState( "" );
+  const [ open, setOpen ] = React.useState( false );
+  const theme = useTheme();
+  const fullScreen = useMediaQuery( theme.breakpoints.down( 'md' ) );
+
+  const handleClickOpen = () => {
+    setOpen( true );
+  };
+
+  const handleClose = () => {
+    setOpen( false );
+  };
 
   const fetchPlayers = async () => {
     console.log( 'fetching players' )
@@ -57,6 +62,7 @@ const App = () => {
   const resetLivesData = async () => {
     const updatedPlayers = await resetLives( maximumLives );
     setPlayers( updatedPlayers );
+    handleClose()
   };
 
   const filteredPlayers = players.filter( ( player ) => {
@@ -149,106 +155,59 @@ const App = () => {
 
   // MUI
 
-  const Search = styled( 'div' )( ( { theme } ) => ( {
-    position: 'relative',
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: alpha( theme.palette.common.white, 0.15 ),
-    '&:hover': {
-      backgroundColor: alpha( theme.palette.common.white, 0.25 ),
-    },
-    marginLeft: 0,
-    width: '100%',
-    [ theme.breakpoints.up( 'sm' ) ]: {
-      marginLeft: theme.spacing( 1 ),
-      width: 'auto',
-    },
-  } ) );
-
-  const SearchIconWrapper = styled( 'div' )( ( { theme } ) => ( {
-    padding: theme.spacing( 0, 2 ),
-    height: '100%',
-    position: 'absolute',
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  } ) );
-
-  const StyledInputBase = styled( InputBase )( ( { theme } ) => ( {
-    color: 'inherit',
-    '& .MuiInputBase-input': {
-      padding: theme.spacing( 1, 1, 1, 0 ),
-      // vertical padding + font size from searchIcon
-      paddingLeft: `calc(1em + ${theme.spacing( 4 )})`,
-      transition: theme.transitions.create( 'width' ),
-      width: '100%',
-      [ theme.breakpoints.up( 'sm' ) ]: {
-        width: '12ch',
-        '&:focus': {
-          width: '20ch',
-        },
-      },
-    },
-  } ) );
-
-  const SearchAppBar = () => {
-    return (
-      <Box sx={ { flexGrow: 1 } }>
-        <AppBar position="fixed">
-          <Toolbar>
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              aria-label="open drawer"
-              sx={ { mr: 2 } }
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography
-              variant="h6"
-              noWrap
-              component="div"
-              sx={ { flexGrow: 1, display: { xs: 'none', sm: 'block' } } }
-            >
-              <img src="logo.png" className={ style.logo } />
-            </Typography>
-
-          </Toolbar>
-        </AppBar>
-      </Box>
-    );
-  }
-
   return (
     <div>
-      <SearchAppBar />
+      <img src="logo.png" className={ style.logo } />
       <div>
-        <br /><br /><br /><br /><br /><br /><br />
+        <br />
 
-        <Button onClick={ resetLivesData } variant="contained">Remise à zéro</Button>
+        <Button variant="outlined" onClick={ handleClickOpen }>
+          PARAMETRES
+        </Button>
+        <Dialog
+          fullScreen={ fullScreen }
+          open={ open }
+          onClose={ handleClose }
+          aria-labelledby="responsive-dialog-title"
+        >
+          <DialogTitle id="responsive-dialog-title">
+            { "PARAMETRES" }
+          </DialogTitle>
+          <DialogContent>
+            <Box width={ 300 }>
+              <br />
+              Nombre de vies maximum : { maximumLives }
+              <Slider value={ maximumLives } min={ 1 }
+                max={ 20 } aria-label="Default" valueLabelDisplay="auto" onChange={ ( e ) => setMaximumLives( parseInt( e.target.value, 10 ) ) } />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button autoFocus onClick={ updateGameSettingsData }>
+              APPLIQUER LA LIMITE
+            </Button>
+            <Button onClick={ resetLivesData } autoFocus>
+              REINITIALISER LES VIES
+            </Button>
 
-        <label>
-          Maximum Lives:
-          <input
-            type="number"
-            min="1"
-            value={ maximumLives }
-            onChange={ ( e ) => setMaximumLives( parseInt( e.target.value, 10 ) ) }
-          />
-        </label>
-        <button onClick={ updateGameSettingsData }>Update Maximum Lives</button>
+            <Button onClick={ handleClose } autoFocus>
+              FERMER
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <br />
 
       </div>
 
       <form onSubmit={ handleSubmit }>
-
-        <TextField value={ firstname } onChange={ ( e ) => setFirstname( e.target.value ) } id="outlined-basic" label="Prénom" variant="outlined" />
+        <br />
+        Ajouter un joueur : <br /> <br />
+        <TextField value={ firstname } onChange={ ( e ) => setFirstname( e.target.value ) } id="outlined-basic" label="Prénom" variant="outlined" /> <br /> <br />
         <TextField value={ lastname } onChange={ ( e ) => setLastname( e.target.value ) } id="outlined-basic" label="Nom" variant="outlined" />
-
-        <button type="submit">Add Player</button>
+        <br /> <br />
+        <Button type="submit" variant="outlined">Ajouter un joueur</Button>
       </form>
-      <h2>Players</h2>
+
       <label>
 
         <TextField value={ searchQuery }
