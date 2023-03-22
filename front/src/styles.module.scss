@@ -1,7 +1,10 @@
 .logo {
  height: 100px;
 }
-
+.listwrapper {
+  margin: 0;
+  padding: 0;
+}
 .list {
 list-style-type: none;
 border-bottom: 1px solid #0000001c;
@@ -18,17 +21,28 @@ width: 35px;
      transition: all 3s ease;
 }
 
+.settings {
+  position: fixed;
+  top:0;
+  right:0;
+}
+
 .emojiFaded {
    transition: all 3s ease;
   opacity: 0.3;
 }
 
 .username {
-
     font-size: 1.5rem;
     text-shadow: 1px 1px 2px #00000038;
     color: #fdd622;
     font-weight: 800;
+      @media screen and (max-width: 768px) {
+        display: block;
+        width: 100%;
+      font-size: 1rem !important;
+
+    }
 }
 
 .dead {

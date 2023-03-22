@@ -18,6 +18,7 @@ import style from "./styles.module.scss";
 import Slider from '@mui/material/Slider';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
+import SettingsIcon from '@mui/icons-material/Settings';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -159,11 +160,12 @@ const App = () => {
     <div>
       <img src="logo.png" className={ style.logo } />
       <div>
-        <br />
 
-        <Button variant="outlined" onClick={ handleClickOpen }>
-          PARAMETRES
-        </Button>
+        <div className={ style.settings }>
+          <IconButton variant="outlined" onClick={ handleClickOpen }>
+            <SettingsIcon />
+          </IconButton>
+        </div>
         <Dialog
           fullScreen={ fullScreen }
           open={ open }
@@ -201,23 +203,24 @@ const App = () => {
 
       <form onSubmit={ handleSubmit }>
         <br />
-        Ajouter un joueur : <br /> <br />
-        <TextField value={ firstname } onChange={ ( e ) => setFirstname( e.target.value ) } id="outlined-basic" label="Prénom" variant="outlined" /> <br /> <br />
-        <TextField value={ lastname } onChange={ ( e ) => setLastname( e.target.value ) } id="outlined-basic" label="Nom" variant="outlined" />
-        <br /> <br />
+
+        <TextField size="small" value={ firstname } onChange={ ( e ) => setFirstname( e.target.value ) } id="outlined-basic" label="Prénom" variant="outlined" />
+        <TextField value={ lastname } size="small" onChange={ ( e ) => setLastname( e.target.value ) } id="outlined-basic" label="Nom" variant="outlined" />
+
         <Button type="submit" variant="outlined">Ajouter un joueur</Button>
       </form>
 
       <label>
-
+        <br />
         <TextField value={ searchQuery }
           onChange={ ( e ) => setSearchQuery( e.target.value ) }
           placeholder="Rechercher..." label="Rechercher" variant="outlined" />
 
       </label>
-      <ul>
+      <ul className={ style.listwrapper }>
         { filteredPlayers.map( ( player ) => (
           <li className={ style.list } key={ player.id }>
+            <div className={ style.userActions }>
             <IconButton color="secondary" aria-label="add an alarm">
               <EditIcon />
             </IconButton>
@@ -230,7 +233,7 @@ const App = () => {
             <IconButton onClick={ () => handleAddLife( player.id ) } color="secondary" aria-label="add an alarm">
               <AddIcon />
             </IconButton>
-
+            </div>
             <span>
               { Array( player.lives )
                 .fill()
