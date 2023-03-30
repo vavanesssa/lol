@@ -3,12 +3,14 @@ const API_URL = import.meta.env.VITE_API + "/api";
 console.log( "API_URL", API_URL );
 
 export async function getPlayers () {
+  console.log( "API /getPlayers" );
   const response = await fetch( `${API_URL}/getplayers` );
+  console.log( "getPlayers response", response );
   return response.json();
 }
 
 export async function addLife ( playerId ) {
-
+  console.log( "API /addLife", playerId );
   const response = await fetch( `${API_URL}/addlive`, {
     method: 'POST',
     headers: {
@@ -16,11 +18,12 @@ export async function addLife ( playerId ) {
     },
     body: JSON.stringify( { id: playerId } ),
   } );
-
+  console.log( "addLife response", response );
   return response.json();
 }
 
 export async function addPlayer ( name, id, lives ) {
+  console.log( "API /addPlayer", name, id, lives );
   const response = await fetch( `${API_URL}/addplayer`, {
     method: 'POST',
     headers: {
@@ -28,17 +31,19 @@ export async function addPlayer ( name, id, lives ) {
     },
     body: JSON.stringify( { name, id, lives } ),
   } );
-
+  console.log( "addPlayer response", response );
   return response.json();
 }
 
-// Add these functions to api.js
 export async function getMaxLives () {
+  console.log( "API /getMaxLives" );
   const response = await fetch( `${API_URL}/getmaxlives` );
+  console.log( "getMaxLives response", response );
   return response.json();
 }
 
 export async function setMaxLives ( value ) {
+  console.log( "API /setMaxLives", value );
   const response = await fetch( `${API_URL}/setmaxlives`, {
     method: 'POST',
     headers: {
@@ -46,16 +51,19 @@ export async function setMaxLives ( value ) {
     },
     body: JSON.stringify( { value } ),
   } );
-
+  console.log( "setMaxLives response", response );
   return response.json();
 }
 
 export async function fetchGameSettings () {
+  console.log( "API /fetchGameSettings" );
   const response = await fetch( `${API_URL}/getsettings` );
+  console.log( "fetchGameSettings response", response );
   return response.json();
 }
 
 export async function updateGameSettings ( maximumLives ) {
+  console.log( "API /updateGameSettings", maximumLives );
   const response = await fetch( `${API_URL}/updatesettings`, {
     method: 'POST',
     headers: {
@@ -63,10 +71,12 @@ export async function updateGameSettings ( maximumLives ) {
     },
     body: JSON.stringify( { maximumLives } ),
   } );
+  console.log( "updateGameSettings response", response );
   return response.json();
 }
 
 export async function resetLives ( maximumLives ) {
+  console.log( "API /resetLives", maximumLives );
   const response = await fetch( `${API_URL}/resetlives`, {
     method: 'POST',
     headers: {
@@ -74,119 +84,105 @@ export async function resetLives ( maximumLives ) {
     },
     body: JSON.stringify( { maximumLives } ),
   } );
+  console.log( "resetLives response", response );
   return response.json();
 }
-
 export async function removePlayer ( playerId ) {
+  console.log( "API /removePlayer", playerId );
   const response = await fetch( `${API_URL}/removeplayer`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify( { id: playerId } ),
   } );
 
   const removedPlayerId = await response.json();
+  console.log( "API /removePlayer response", removedPlayerId );
   return removedPlayerId;
 }
 
 export async function removeLife ( playerId ) {
+  console.log( "API /removeLife", playerId );
   const response = await fetch( `${API_URL}/removelive`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify( { id: playerId } ),
   } );
 
-  return response.json();
+  const removedLife = await response.json();
+  console.log( "API /removeLife response", removedLife );
+  return removedLife;
 }
 
 export async function editPlayer ( playerId, newName ) {
+  console.log( "API /editPlayer", playerId, newName );
   const response = await fetch( `${API_URL}/editplayer`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify( { id: playerId, name: newName } ),
   } );
 
-  return response.json();
+  const updatedPlayer = await response.json();
+  console.log( "API /editPlayer response", updatedPlayer );
+  return updatedPlayer;
 }
 
 export async function addTeam ( name, id ) {
+  console.log( "API /addTeam", name, id );
   const response = await fetch( `${API_URL}/addteam`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify( { name, id } ),
   } );
 
-  return response.json();
+  const addedTeam = await response.json();
+  console.log( "API /addTeam response", addedTeam );
+  return addedTeam;
 }
 
-// export const addTeam = async ( name ) => {
-//   const response = await fetch( `${API_URL}/addteam`, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify( { name } ),
-//   } );
-
-//   if ( response.ok ) {
-//     const newTeam = await response.json();
-//     return newTeam;
-//   } else {
-//     throw new Error( "Failed to add team" );
-//   }
-// };
-
-// Get all teams
 export async function getTeams () {
+  console.log( "API /getTeams" );
   const response = await fetch( `${API_URL}/getteams` );
-  return response.json();
+
+  const teams = await response.json();
+  console.log( "API /getTeams response", teams );
+  return teams;
 }
 
-// Edit team
-export async function editTeam ( teamId, newName ) {
+export async function editTeam ( id, newName ) {
+  console.log( "API /editTeam", id, newName );
   const response = await fetch( `${API_URL}/editteam`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify( { id: teamId, name: newName } ),
+    body: JSON.stringify( { id: id, name: newName } ),
   } );
 
-  return response.json();
+  const updatedTeam = await response.json();
+  console.log( "API /editTeam response", updatedTeam );
+  return updatedTeam;
 }
 
-// Remove team
-// export async function removeTeam ( teamId ) {
-//   const response = await fetch( `${API_URL}/removeteam`, {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify( { teamId: teamId } ),
-
-//   } );
-
-//   const removedTeamId = await response.json();
-//   return removedTeamId;
-// }
-
-export async function removeTeam ( teamId ) {
+export async function removeTeam ( id ) {
+  console.log( "API /removeTeam", id );
   const response = await fetch( `${API_URL}/removeteam`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify( { id: teamId } ),
+    body: JSON.stringify( { id: id } ),
   } );
 
   const removedTeamId = await response.json();
+  console.log( "API /removeTeam response", removedTeamId );
   return removedTeamId;
 }
 

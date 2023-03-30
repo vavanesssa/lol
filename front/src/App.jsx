@@ -34,6 +34,8 @@ function UuidGenerator () {
 const App = () => {
   const [ teamName, setTeamName ] = useState( '' );
   const [ teams, setTeams ] = useState( [] );
+  const [ editingTeam, setEditingTeam ] = useState( null );
+  const [ editingTeamName, setEditingTeamName ] = useState( '' );
   const [ unassignedPlayers, setUnassignedPlayers ] = useState( [] );
   const [ editingPlayer, setEditingPlayer ] = useState( null );
   const [ editingName, setEditingName ] = useState( "" );
@@ -113,12 +115,11 @@ const App = () => {
   }, [] );
 
   useEffect( () => {
-    socket.connect();
-
-    socket.on( 'playerAdded', ( player ) => {
-      setPlayers( ( prevPlayers ) => {
+    const handlePlayerAdded = ( player ) => {
+      console.log( 'SOCKET /playerAdded', player );
+      setPlayers( prevPlayers => {
         // Check if the player already exists in the players array
-        const existingPlayer = prevPlayers.find( ( prevPlayer ) => prevPlayer.id === player.id );
+        const existingPlayer = prevPlayers.find( prevPlayer => prevPlayer.id === player.id );
 
         // If the player doesn't exist, add the new player to the array
         if ( !existingPlayer ) {
@@ -128,36 +129,78 @@ const App = () => {
         // Otherwise, return the unmodified players array
         return prevPlayers;
       } );
-    } );
+    };
 
-    socket.on( 'playerRemoved', ( playerId ) => {
-      setPlayers( ( prevPlayers ) => prevPlayers.filter( ( player ) => player.id !== playerId ) );
-    } );
+    const handlePlayerRemoved = ( playerId ) => {
+      console.log( 'SOCKET /playerRemoved', playerId );
+      setPlayers( prevPlayers => prevPlayers.filter( player => player.id !== playerId ) );
+    };
 
-    socket.on( 'livesUpdated', ( updatedPlayer ) => {
-      setPlayers( ( prevPlayers ) =>
-        prevPlayers.map( ( player ) => ( player.id === updatedPlayer.id ? updatedPlayer : player ) ),
+    const handleLivesUpdated = ( updatedPlayer ) => {
+      console.log( 'SOCKET /livesUpdated', updatedPlayer );
+      setPlayers( prevPlayers =>
+        prevPlayers.map( player => ( player.id === updatedPlayer.id ? updatedPlayer : player ) ),
       );
-    } );
+    };
 
-    socket.on( 'updateSettings', () => {
+    const handleUpdateSettings = () => {
+      console.log( 'SOCKET /updateSettings' );
       fetchGameSettingsData();
-    } );
+    };
 
-    socket.on( 'playersReset', ( players ) => {
+    const handlePlayersReset = ( players ) => {
+      console.log( 'SOCKET /playersReset', players );
       setPlayers( players );
-    } );
+    };
 
-    socket.on( "teamAdded", ( team ) => {
-      setTeams( ( prevTeams ) => [ ...prevTeams, team ] );
-    } );
+    const handleTeamAdded = ( team ) => {
+      console.log( 'SOCKET /teamAdded', team );
+      setTeams( ( prevTeams ) => {
+        const existingTeam = prevTeams.find( ( prevTeam ) => prevTeam.id === team.id );
 
-    socket.on( "teamRemoved", ( teamId ) => {
-      setTeams( ( prevTeams ) => prevTeams.filter( ( team ) => team.id !== teamId ) );
-    } );
+        if ( !existingTeam ) {
+          return [ ...prevTeams, team ];
+        }
+
+        return prevTeams;
+      } );
+      socket.emit( 'teamAdded', team );
+    };
+
+    const handleTeamRemoved = ( teamId ) => {
+      console.log( 'SOCKET /teamRemoved', teamId );
+      fetchTeams();
+      socket.emit( 'teamRemoved', teamId );
+    };
+
+    const handleTeamUpdated = ( teamId ) => {
+      console.log( 'SOCKET /teamUpdated', teamId );
+      fetchTeams();
+      socket.emit( 'teamUpdated', teamId );
+    };
+
+    socket.connect();
+
+    socket.on( 'playerAdded', handlePlayerAdded );
+    socket.on( 'playerRemoved', handlePlayerRemoved );
+    socket.on( 'livesUpdated', handleLivesUpdated );
+    socket.on( 'updateSettings', handleUpdateSettings );
+    socket.on( 'playersReset', handlePlayersReset );
+    socket.on( 'teamAdded', handleTeamAdded );
+    socket.on( 'teamUpdated', handleTeamUpdated );
+    socket.on( 'teamRemoved', handleTeamRemoved );
 
     return () => {
       socket.disconnect();
+
+      socket.off( 'playerAdded', handlePlayerAdded );
+      socket.off( 'playerRemoved', handlePlayerRemoved );
+      socket.off( 'livesUpdated', handleLivesUpdated );
+      socket.off( 'updateSettings', handleUpdateSettings );
+      socket.off( 'playersReset', handlePlayersReset );
+      socket.off( 'teamAdded', handleTeamAdded );
+      socket.off( 'teamUpdated', handleTeamUpdated );
+      socket.off( 'teamRemoved', handleTeamRemoved );
     };
   }, [] );
 
@@ -176,15 +219,33 @@ const App = () => {
   const handleTeamSubmit = async ( e ) => {
     e.preventDefault();
     const newTeam = await addTeam( teamName );
-    setTeamName( "" );
+    setTeamName( '' );
     fetchTeams();
-    socket.emit( "clientTeamAdded", newTeam ); // Emit event when a team is added
+    socket.emit( 'teamAdded', newTeam );
+  };
+
+  const handleEditTeam = async ( teamId, e ) => {
+    e.preventDefault();
+    if ( !editingTeamName ) return;
+
+    const updatedTeam = await editTeam( teamId, editingTeamName );
+    if ( updatedTeam.success ) {
+      setTeams( ( prevTeams ) =>
+        prevTeams.map( ( team ) =>
+          team.id === teamId ? { ...team, name: editingTeamName } : team
+        )
+      );
+    }
+
+    setEditingTeam( null );
+    setEditingTeamName( '' );
+
   };
 
   const handleRemoveTeam = async ( teamId ) => {
     await removeTeam( teamId );
     fetchTeams();
-    socket.emit( "clientTeamRemoved", teamId ); // Emit event when a team is removed
+
   };
 
   const fetchTeams = async () => {
@@ -279,8 +340,38 @@ const App = () => {
 
       { teams.map( ( team ) => (
         <div key={ team.id }>
-          <h2>{ team.name }</h2>
+          <h2>
+            { editingTeam === team.id ? (
+              <form onSubmit={ ( e ) => handleEditTeam( team.id, e ) }>
+                <TextField
+                  value={ editingTeamName }
+                  onChange={ ( e ) => setEditingTeamName( e.target.value ) }
+                  size="small"
+                  autoFocus
+                />
+                <Button type="submit" variant="outlined">
+                  Modifier
+                </Button>
+                <Button
+                  onClick={ () => {
+                    setEditingTeam( null );
+                    setEditingTeamName( '' );
+                  } }
+                >
+                  Annuler
+                </Button>
+              </form>
+            ) : (
+              <>
+                { team.name }{ " " }
+                <IconButton onClick={ () => setEditingTeam( team.id ) }>
+                  <EditIcon />
+                </IconButton>
+              </>
+            ) }
+          </h2>
           <Button onClick={ () => handleRemoveTeam( team.id ) }>Remove</Button>
+          <span>{ team.key }</span>
         </div>
       ) ) }
 
