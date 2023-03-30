@@ -19,13 +19,13 @@ export async function addLife ( playerId ) {
   return response.json();
 }
 
-export async function addPlayer ( firstname, lastname, id, lives ) {
+export async function addPlayer ( name, id, lives ) {
   const response = await fetch( `${API_URL}/addplayer`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify( { firstname, lastname, id, lives } ),
+    body: JSON.stringify( { name, id, lives } ),
   } );
 
   return response.json();
@@ -96,6 +96,18 @@ export async function removeLife ( playerId ) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify( { id: playerId } ),
+  } );
+
+  return response.json();
+}
+
+export async function editPlayer ( playerId, newName ) {
+  const response = await fetch( `${API_URL}/editplayer`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify( { id: playerId, name: newName } ),
   } );
 
   return response.json();

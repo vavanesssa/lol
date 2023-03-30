@@ -3,8 +3,7 @@ const { v4: uuidv4 } = require( 'uuid' );
 
 const playerSchema = new Schema( {
   playerIDd: { type: String, default: uuidv4 },
-  firstname: String,
-  lastname: String,
+  name: String,
   teamID: { type: String, default: '' },
   lives: { type: Number, default: 10 },
 } );

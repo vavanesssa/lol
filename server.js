@@ -21,8 +21,7 @@ mongoose
   .catch( ( err ) => logger( err ) )
 
 const playerSchema = new mongoose.Schema( {
-  firstname: String,
-  lastname: String,
+  name: String,
   id: String,
   teamID: String,
   lives: { type: Number, default: 10 },
@@ -86,14 +85,14 @@ app.get( '/api/getplayers/:playerid', async ( req, res ) => {
 } );
 
 app.post( '/api/addplayer', async ( req, res ) => {
-  const { firstname, lastname, lives } = req.body;
+  const { name, lives } = req.body;
   try {
     const id = uuidv4();
-    const newPlayer = new Player( { firstname, lastname, id, teamID: '', lives: lives } );
+    const newPlayer = new Player( { name, id, teamID: '', lives: lives } );
     await newPlayer.save();
     io.emit( 'playerAdded', newPlayer );
     res.json( newPlayer );
-    logger( `POST /addplayer - Added player: ${firstname} ${lastname}` );
+    logger( `POST /addplayer - Added player: ${name}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
     res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -101,16 +100,16 @@ app.post( '/api/addplayer', async ( req, res ) => {
 } );
 
 app.post( '/api/editplayer', async ( req, res ) => {
-  const { id, firstname, lastname } = req.body;
+  const { id, name } = req.body;
   try {
     const player = await Player.findOneAndUpdate(
       { id },
-      { firstname, lastname },
+      { name },
       { new: true }
     );
     io.emit( 'playerUpdated', player );
     res.json( player );
-    logger( `POST /editplayer - Updated player: ${firstname} ${lastname}` );
+    logger( `POST /editplayer - Updated player: ${name} ` );
   } catch ( err ) {
     logger( `Error: ${err}` );
     res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -123,7 +122,7 @@ app.post( '/api/removeplayer', async ( req, res ) => {
     const player = await Player.findOneAndDelete( { id } );
     io.emit( 'playerRemoved', id );
     res.json( player );
-    logger( `POST /removeplayer - Removed player: ${player.firstname} ${player.lastname}` );
+    logger( `POST /removeplayer - Removed player: ${player.name}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
     res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -157,7 +156,7 @@ app.post( "/api/removelive", async ( req, res ) => {
       io.emit( 'livesUpdated', player );
     }
     res.json( player );
-    logger( `POST /removelive - Removed live from ${player.firstname} ${player.lastname}, lives left: ${player.lives}` );
+    logger( `POST /removelive - Removed live from ${player.name} , lives left: ${player.lives}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
     res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -175,7 +174,7 @@ app.post( "/api/addlive", async ( req, res ) => {
       io.emit( "livesUpdated", player );
     }
     res.json( player );
-    logger( `POST / addlive - Added live to ${player.firstname} ${player.lastname}, lives left: ${player.lives} ` );
+    logger( `POST / addlive - Added live to ${player.name} , lives left: ${player.lives} ` );
   } catch ( err ) {
     logger( `Error: ${err} ` );
     res.status( 500 ).json( { error: "Internal Server Error" } );
@@ -229,3 +228,14 @@ app.post( '/api/resetlives', async ( req, res ) => {
   }
 } );
 
+app.post( '/editplayer', ( req, res ) => {
+  const { id, name } = req.body;
+
+  const playerIndex = players.findIndex( ( player ) => player.id === id );
+
+  if ( playerIndex !== -1 ) {
+    players[ playerIndex ].name = name;
+  }
+
+  res.json( { success: true } );
+} );

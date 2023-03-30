@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife } from './api';
+import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife, editPlayer } from './api';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import socket from './socket';
@@ -31,9 +31,14 @@ function UuidGenerator () {
   return { uuid };
 }
 const App = () => {
+  const [ teams, setTeams ] = useState( [] );
+  const [ unassignedPlayers, setUnassignedPlayers ] = useState( [] );
+
+  const [ editingPlayer, setEditingPlayer ] = useState( null );
+  const [ editingName, setEditingName ] = useState( "" );
+
   const [ players, setPlayers ] = useState( [] );
-  const [ firstname, setFirstname ] = useState( '' );
-  const [ lastname, setLastname ] = useState( '' );
+  const [ name, setName ] = useState( '' );
   const [ id, setId ] = useState( '' );
   const [ maximumLives, setMaximumLives ] = useState( 0 );
   const [ searchQuery, setSearchQuery ] = useState( "" );
@@ -71,8 +76,29 @@ const App = () => {
     handleClose()
   };
 
+  const handleEditSubmit = async ( playerId, e ) => {
+    e.preventDefault();
+    if ( !editingName ) return;
+
+    // Mettre à jour le prénom du joueur avec l'API
+    const updatedPlayer = await editPlayer( playerId, editingName );
+    if ( updatedPlayer.success ) {
+      setPlayers( ( prevPlayers ) =>
+        prevPlayers.map( ( player ) =>
+          player.id === playerId ? { ...player, name: editingName } : player,
+        ),
+      );
+    }
+    setTimeout( () => {
+      fetchPlayers();
+    }, 200 );
+
+    setEditingPlayer( null );
+    setEditingName( '' );
+  };
+
   const filteredPlayers = players.filter( ( player ) => {
-    const fullName = `${player.firstname} ${player.lastname}`.toLowerCase();
+    const fullName = `${player.name}`.toLowerCase();
     return fullName.includes( searchQuery.toLowerCase() );
   } );
 
@@ -127,9 +153,8 @@ const App = () => {
 
   const handleSubmit = async ( e ) => {
     e.preventDefault();
-    await addPlayer( firstname, lastname, id, maximumLives );
-    setFirstname( '' );
-    setLastname( '' );
+    await addPlayer( name, id, maximumLives );
+    setName( '' );
     setId( '' );
   };
 
@@ -212,8 +237,7 @@ const App = () => {
       <form onSubmit={ handleSubmit }>
         <br />
 
-        <TextField size="small" value={ firstname } onChange={ ( e ) => setFirstname( e.target.value ) } id="outlined-basic" label="Prénom" variant="outlined" />
-        <TextField value={ lastname } size="small" onChange={ ( e ) => setLastname( e.target.value ) } id="outlined-basic" label="Nom" variant="outlined" />
+        <TextField size="small" value={ name } onChange={ ( e ) => setName( e.target.value ) } id="outlined-basic" label="Prénom" variant="outlined" />
 
         <Button type="submit" variant="outlined">Ajouter un joueur</Button>
       </form>
@@ -229,9 +253,17 @@ const App = () => {
         { filteredPlayers.map( ( player ) => (
           <li className={ style.list } key={ player.id }>
             <div className={ style.userActions }>
-            <IconButton color="secondary" aria-label="add an alarm">
-              <EditIcon />
-            </IconButton>
+              <IconButton
+                color="secondary"
+                aria-label="edit"
+                onClick={ () => {
+                  setEditingPlayer( player.id );
+                  setEditingName( player.name );
+                } }
+              >
+                <EditIcon />
+              </IconButton>
+
             <IconButton onClick={ () => handleRemovePlayer( player.id ) } color="secondary" aria-label="add an alarm">
               <DeleteForeverIcon />
             </IconButton>
@@ -258,7 +290,32 @@ const App = () => {
                   : "" }
               </span>
 
-              <span className={ player.lives == 0 ? style.dead : style.username }>{ player.firstname } { player.lastname }</span>
+              <span className={ player.lives == 0 ? style.dead : style.username }>
+                { editingPlayer === player.id ? (
+                  <form onSubmit={ ( e ) => handleEditSubmit( player.id, e ) }>
+                    <TextField
+                      value={ editingName }
+                      onChange={ ( e ) => setEditingName( e.target.value ) }
+                      size="small"
+                      autoFocus
+                    />
+                    <Button type="submit" variant="outlined">
+                      Modifier
+                    </Button>
+                    <Button
+                      onClick={ () => {
+                        setEditingPlayer( null );
+                        setEditingName( "" );
+                      } }
+                    >
+                      Annuler
+                    </Button>
+                  </form>
+                ) : (
+                  `${player.name}`
+                ) }
+              </span>
+
             </span>
 
           </li>
