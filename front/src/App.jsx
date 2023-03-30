@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife, editPlayer } from './api';
+import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife, editPlayer, addTeam, getTeams, editTeam, removeTeam } from './api';
+
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import socket from './socket';
@@ -31,9 +32,9 @@ function UuidGenerator () {
   return { uuid };
 }
 const App = () => {
+  const [ teamName, setTeamName ] = useState( '' );
   const [ teams, setTeams ] = useState( [] );
   const [ unassignedPlayers, setUnassignedPlayers ] = useState( [] );
-
   const [ editingPlayer, setEditingPlayer ] = useState( null );
   const [ editingName, setEditingName ] = useState( "" );
 
@@ -105,6 +106,7 @@ const App = () => {
   useEffect( () => {
     fetchPlayers();
     fetchGameSettingsData();
+    fetchTeams();
     setInterval( () => {
       fetchPlayers()
     }, 60000 );
@@ -146,6 +148,14 @@ const App = () => {
       setPlayers( players );
     } );
 
+    socket.on( "teamAdded", ( team ) => {
+      setTeams( ( prevTeams ) => [ ...prevTeams, team ] );
+    } );
+
+    socket.on( "teamRemoved", ( teamId ) => {
+      setTeams( ( prevTeams ) => prevTeams.filter( ( team ) => team.id !== teamId ) );
+    } );
+
     return () => {
       socket.disconnect();
     };
@@ -161,6 +171,25 @@ const App = () => {
   const handleRemovePlayer = async ( playerId ) => {
     const removedPlayerId = await removePlayer( playerId );
     socket.emit( 'clientPlayerRemoved', removedPlayerId );
+  };
+
+  const handleTeamSubmit = async ( e ) => {
+    e.preventDefault();
+    const newTeam = await addTeam( teamName );
+    setTeamName( "" );
+    fetchTeams();
+    socket.emit( "clientTeamAdded", newTeam ); // Emit event when a team is added
+  };
+
+  const handleRemoveTeam = async ( teamId ) => {
+    await removeTeam( teamId );
+    fetchTeams();
+    socket.emit( "clientTeamRemoved", teamId ); // Emit event when a team is removed
+  };
+
+  const fetchTeams = async () => {
+    const teams = await getTeams();
+    setTeams( teams );
   };
 
   const handleRemoveLife = async ( playerId ) => {
@@ -233,6 +262,27 @@ const App = () => {
         <br />
 
       </div>
+
+      <form onSubmit={ handleTeamSubmit }>
+        <TextField
+          size="small"
+          value={ teamName }
+          onChange={ ( e ) => setTeamName( e.target.value ) }
+          id="outlined-basic"
+          label="Nom de l'équipe"
+          variant="outlined"
+        />
+        <Button type="submit" variant="outlined">
+          Ajouter une équipe
+        </Button>
+      </form>
+
+      { teams.map( ( team ) => (
+        <div key={ team.id }>
+          <h2>{ team.name }</h2>
+          <Button onClick={ () => handleRemoveTeam( team.id ) }>Remove</Button>
+        </div>
+      ) ) }
 
       <form onSubmit={ handleSubmit }>
         <br />

@@ -20,19 +20,25 @@ mongoose
   .then( () => logger( 'MongoDB connected' ) )
   .catch( ( err ) => logger( err ) )
 
+const gameSettingsSchema = new mongoose.Schema( {
+  maximumLives: { type: Number, default: 10 },
+} );
+
+const GameSettings = mongoose.model( "GameSettings", gameSettingsSchema );
 const playerSchema = new mongoose.Schema( {
   name: String,
   id: String,
   teamID: String,
   lives: { type: Number, default: 10 },
 } )
-
-const gameSettingsSchema = new mongoose.Schema( {
-  maximumLives: { type: Number, default: 10 },
-} );
-
-const GameSettings = mongoose.model( "GameSettings", gameSettingsSchema );
 const Player = mongoose.model( 'Player', playerSchema )
+
+const teamSchema = new mongoose.Schema( {
+  name: String,
+  id: String,
+  createdAt: { type: Date, default: Date.now },
+} );
+const Team = mongoose.model( 'Team', teamSchema );
 
 // App Middlewares
 app.use( cors() )
@@ -239,3 +245,79 @@ app.post( '/editplayer', ( req, res ) => {
 
   res.json( { success: true } );
 } );
+
+// TEAMS
+
+app.post( '/api/addteam', async ( req, res ) => {
+  const { name } = req.body;
+  try {
+    const id = uuidv4();
+    const newTeam = new Team( { name, id } );
+    await newTeam.save();
+    io.emit( 'teamAdded', newTeam );
+    res.json( newTeam );
+    logger( `POST /addTeam - Added Team: ${name}` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
+// app.post( '/api/addteam', async ( req, res ) => {
+//   const { name } = req.body;
+//   try {
+//     const uniqueId = uuidv4();
+//     const team = new Team( { name, uniqueId } );
+//     await team.save();
+//     io.emit( 'teamAdded', team );
+//     res.json( team );
+//     logger( `POST /addteam - Added team: ${name}` );
+//   } catch ( err ) {
+//     logger( `Error: ${err}` );
+//     res.status( 500 ).json( { error: 'Internal Server Error' } );
+//   }
+// } );
+
+app.get( '/api/getteams', async ( req, res ) => {
+  try {
+    const teams = await Team.find();
+    res.json( teams );
+    logger( `GET /getteams - Retrieved ${teams.length} teams` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
+app.post( '/api/editteam', async ( req, res ) => {
+  const { teamId, name } = req.body;
+  try {
+    const team = await Team.findOneAndUpdate(
+      { uniqueId: teamId },
+      { name },
+      { new: true }
+    );
+    io.emit( 'teamUpdated', team );
+    res.json( team );
+    logger( `POST /editteam - Updated team: ${name}` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
+app.post( '/api/removeteam', async ( req, res ) => {
+  const { teamId } = req.body;
+  try {
+    const team = await Team.findOneAndDelete( { uniqueId: teamId } );
+    io.emit( 'teamRemoved', teamId );
+    res.json( team );
+    logger( `POST /removeteam - Removed team: ${team.name}` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
+const routes = app._router.stack.filter( ( r ) => r.route ).map( ( r ) => r.route.path + '\n' );
+console.log( `MDR API'S:\n${routes.join( '' )}` );

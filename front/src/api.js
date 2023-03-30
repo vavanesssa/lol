@@ -8,6 +8,7 @@ export async function getPlayers () {
 }
 
 export async function addLife ( playerId ) {
+
   const response = await fetch( `${API_URL}/addlive`, {
     method: 'POST',
     headers: {
@@ -112,3 +113,80 @@ export async function editPlayer ( playerId, newName ) {
 
   return response.json();
 }
+
+export async function addTeam ( name, id ) {
+  const response = await fetch( `${API_URL}/addteam`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify( { name, id } ),
+  } );
+
+  return response.json();
+}
+
+// export const addTeam = async ( name ) => {
+//   const response = await fetch( `${API_URL}/addteam`, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify( { name } ),
+//   } );
+
+//   if ( response.ok ) {
+//     const newTeam = await response.json();
+//     return newTeam;
+//   } else {
+//     throw new Error( "Failed to add team" );
+//   }
+// };
+
+// Get all teams
+export async function getTeams () {
+  const response = await fetch( `${API_URL}/getteams` );
+  return response.json();
+}
+
+// Edit team
+export async function editTeam ( teamId, newName ) {
+  const response = await fetch( `${API_URL}/editteam`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify( { id: teamId, name: newName } ),
+  } );
+
+  return response.json();
+}
+
+// Remove team
+// export async function removeTeam ( teamId ) {
+//   const response = await fetch( `${API_URL}/removeteam`, {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify( { teamId: teamId } ),
+
+//   } );
+
+//   const removedTeamId = await response.json();
+//   return removedTeamId;
+// }
+
+export async function removeTeam ( teamId ) {
+  const response = await fetch( `${API_URL}/removeteam`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify( { id: teamId } ),
+  } );
+
+  const removedTeamId = await response.json();
+  return removedTeamId;
+}
+
