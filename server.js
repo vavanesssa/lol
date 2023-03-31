@@ -106,11 +106,12 @@ app.post( '/api/addplayer', async ( req, res ) => {
 } );
 
 app.post( '/api/editplayer', async ( req, res ) => {
-  const { id, name } = req.body;
+  console.log( req.body )
+  const { id, name, teamID } = req.body;
   try {
     const player = await Player.findOneAndUpdate(
       { id },
-      { name },
+      { name, teamID },
       { new: true }
     );
     io.emit( 'playerUpdated', player );

@@ -12,6 +12,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import Settings from './Settings';
 
 const App = () => {
+
   const [ teamName, setTeamName ] = useState( '' );
   const [ teams, setTeams ] = useState( [] );
   const [ editingTeam, setEditingTeam ] = useState( null );
@@ -44,20 +45,19 @@ const App = () => {
     if ( !editingName ) return;
 
     // Mettre à jour le prénom du joueur avec l'API
-    const updatedPlayer = await editPlayer( playerId, editingName );
+    const updatedPlayer = await editPlayer( playerId, editingName, selectedTeam );
     if ( updatedPlayer.success ) {
       setPlayers( ( prevPlayers ) =>
         prevPlayers.map( ( player ) =>
-          player.id === playerId ? { ...player, name: editingName } : player,
-        ),
+          player.id === playerId ? { ...player, name: editingName, teamID: selectedTeam } : player
+        )
       );
     }
-    setTimeout( () => {
-      fetchPlayers();
-    }, 200 );
 
+    // Réinitialiser les états d'édition
     setEditingPlayer( null );
     setEditingName( '' );
+    setSelectedTeam( null );
   };
 
   const filteredPlayers = players.filter( ( player ) => {
@@ -254,7 +254,7 @@ const App = () => {
 
   return (
     <div>
-      <img src="logo.png" className={ style.logo } />
+      <img src="logo.png" className={ style.logo } /> { selectedTeam }
       <div>
         <Settings />
 
@@ -411,7 +411,10 @@ const App = () => {
                     </Button>
                   </form>
                 ) : (
-                  `${player.name}`
+                    <div>
+                      { player.name } { player.teamID && teams.find( ( team ) => team.id === player.teamID )?.name }
+                    </div>
+
                 ) }
               </span>
 

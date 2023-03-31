@@ -117,14 +117,14 @@ export async function removeLife ( playerId ) {
   return removedLife;
 }
 
-export async function editPlayer ( playerId, newName ) {
-  console.log( "API /editPlayer", playerId, newName );
+export async function editPlayer ( playerId, newName, newTeamID ) {
+  console.log( "API /editPlayer", playerId, newName, newTeamID );
   const response = await fetch( `${API_URL}/editplayer`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify( { id: playerId, name: newName } ),
+    body: JSON.stringify( { id: playerId, name: newName, teamID: newTeamID } ),
   } );
 
   const updatedPlayer = await response.json();
