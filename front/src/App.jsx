@@ -1,44 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife, editPlayer, addTeam, getTeams, editTeam, removeTeam } from './api';
 
-import Button from '@mui/material/Button';
-import ButtonGroup from '@mui/material/ButtonGroup';
 import socket from './socket';
 
-import { styled, alpha } from '@mui/material/styles';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import TextField from '@mui/material/TextField';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { Button, Box, IconButton, TextField, Slider, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, Select, MenuItem, useTheme } from '@mui/material';
+import { Add as AddIcon, Remove as RemoveIcon, Edit as EditIcon, DeleteForever as DeleteForeverIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import style from "./styles.module.scss";
-import Slider from '@mui/material/Slider';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import SettingsIcon from '@mui/icons-material/Settings';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
-import { v4 as uuidv4 } from 'uuid';
 
-function UuidGenerator () {
-  const uuid = uuidv4();
-  return { uuid };
-}
+// Custom components
+
 const App = () => {
   const [ teamName, setTeamName ] = useState( '' );
   const [ teams, setTeams ] = useState( [] );
   const [ editingTeam, setEditingTeam ] = useState( null );
   const [ editingTeamName, setEditingTeamName ] = useState( '' );
-  const [ unassignedPlayers, setUnassignedPlayers ] = useState( [] );
   const [ editingPlayer, setEditingPlayer ] = useState( null );
   const [ editingName, setEditingName ] = useState( "" );
+  const [ selectedTeam, setSelectedTeam ] = useState( null );
 
   const [ players, setPlayers ] = useState( [] );
   const [ name, setName ] = useState( '' );
@@ -205,45 +184,52 @@ const App = () => {
   }, [] );
 
   const handleSubmit = async ( e ) => {
+    console.log( "Front/handleSubmit", { name, id, maximumLives } );
     e.preventDefault();
     await addPlayer( name, id, maximumLives );
     setName( '' );
     setId( '' );
+    console.log( "Front/handleSubmit complete" );
   };
 
   const handleRemovePlayer = async ( playerId ) => {
+    console.log( "Front/handleRemovePlayer", { playerId } );
     const removedPlayerId = await removePlayer( playerId );
     socket.emit( 'clientPlayerRemoved', removedPlayerId );
+    console.log( "Front/handleRemovePlayer complete" );
   };
 
   const handleTeamSubmit = async ( e ) => {
+    console.log( "Front/handleTeamSubmit", { teamName } );
     e.preventDefault();
     const newTeam = await addTeam( teamName );
     setTeamName( '' );
     fetchTeams();
     socket.emit( 'teamAdded', newTeam );
+    console.log( "Front/handleTeamSubmit complete" );
   };
 
-  const handleEditTeam = async ( teamId, e ) => {
+  const handleEditTeam = async ( id, e ) => {
+    console.log( "Front/handleEditTeam", { id, editingTeamName } );
     e.preventDefault();
     if ( !editingTeamName ) return;
 
-    const updatedTeam = await editTeam( teamId, editingTeamName );
+    const updatedTeam = await editTeam( id, editingTeamName );
     if ( updatedTeam.success ) {
       setTeams( ( prevTeams ) =>
         prevTeams.map( ( team ) =>
-          team.id === teamId ? { ...team, name: editingTeamName } : team
+          team.id === id ? { ...team, name: editingTeamName } : team
         )
       );
     }
 
     setEditingTeam( null );
-    setEditingTeamName( '' );
 
+    setEditingTeamName( '' );
   };
 
-  const handleRemoveTeam = async ( teamId ) => {
-    await removeTeam( teamId );
+  const handleRemoveTeam = async ( id ) => {
+    await removeTeam( id );
     fetchTeams();
 
   };
@@ -337,7 +323,6 @@ const App = () => {
           Ajouter une équipe
         </Button>
       </form>
-
       { teams.map( ( team ) => (
         <div key={ team.id }>
           <h2>
@@ -355,7 +340,7 @@ const App = () => {
                 <Button
                   onClick={ () => {
                     setEditingTeam( null );
-                    setEditingTeamName( '' );
+                    setEditingTeamName( "" );
                   } }
                 >
                   Annuler
@@ -440,6 +425,27 @@ const App = () => {
                       size="small"
                       autoFocus
                     />
+
+                    <FormControl variant="outlined" size="small">
+                      <InputLabel htmlFor="team-selector">Équipe</InputLabel>
+                      <Select
+                        native
+                        value={ selectedTeam }
+                        onChange={ ( e ) => setSelectedTeam( e.target.value ) }
+                        label="Équipe"
+                        inputProps={ {
+                          name: 'team',
+                          id: 'team-selector',
+                        } }
+                        style={ { minWidth: '150px', marginLeft: '10px' } }
+                      >
+                        <option aria-label="None" value="" />
+                        { teams.map( ( team ) => (
+                          <option key={ team.id } value={ team.id }>{ team.name }</option>
+                        ) ) }
+                      </Select>
+                    </FormControl>
+
                     <Button type="submit" variant="outlined">
                       Modifier
                     </Button>

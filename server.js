@@ -290,10 +290,11 @@ app.get( '/api/getteams', async ( req, res ) => {
 } );
 
 app.post( '/api/editteam', async ( req, res ) => {
-  const { teamId, name } = req.body;
+  const { id, name } = req.body;
+
   try {
     const team = await Team.findOneAndUpdate(
-      { uniqueId: teamId },
+      { id },
       { name },
       { new: true }
     );
