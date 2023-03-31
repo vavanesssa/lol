@@ -308,10 +308,10 @@ app.post( '/api/editteam', async ( req, res ) => {
 } );
 
 app.post( '/api/removeteam', async ( req, res ) => {
-  const { teamId } = req.body;
+  const { id } = req.body;
   try {
-    const team = await Team.findOneAndDelete( { uniqueId: teamId } );
-    io.emit( 'teamRemoved', teamId );
+    const team = await Team.findOneAndDelete( { id } );
+    io.emit( 'teamRemoved', id );
     res.json( team );
     logger( `POST /removeteam - Removed team: ${team.name}` );
   } catch ( err ) {

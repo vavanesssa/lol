@@ -9,6 +9,7 @@ import style from "./styles.module.scss";
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 // Custom components
+import Settings from './Settings';
 
 const App = () => {
   const [ teamName, setTeamName ] = useState( '' );
@@ -24,38 +25,18 @@ const App = () => {
   const [ id, setId ] = useState( '' );
   const [ maximumLives, setMaximumLives ] = useState( 0 );
   const [ searchQuery, setSearchQuery ] = useState( "" );
-  const [ open, setOpen ] = React.useState( false );
   const theme = useTheme();
-  const fullScreen = useMediaQuery( theme.breakpoints.down( 'md' ) );
-
-  const handleClickOpen = () => {
-    setOpen( true );
-  };
-
-  const handleClose = () => {
-    setOpen( false );
-  };
 
   const fetchPlayers = async () => {
-    console.log( 'fetching players' )
+    console.log( 'REACT/ fetching players' )
     const initialPlayers = await getPlayers();
     setPlayers( initialPlayers );
   };
 
   const fetchGameSettingsData = async () => {
-    console.log( 'fetching game settings' );
+    console.log( 'REACT/ fetching game settings' );
     const settings = await fetchGameSettings();
     setMaximumLives( settings.maximumLives );
-  };
-
-  const updateGameSettingsData = async () => {
-    await updateGameSettings( maximumLives );
-  };
-
-  const resetLivesData = async () => {
-    const updatedPlayers = await resetLives( maximumLives );
-    setPlayers( updatedPlayers );
-    handleClose()
   };
 
   const handleEditSubmit = async ( playerId, e ) => {
@@ -90,7 +71,7 @@ const App = () => {
     fetchTeams();
     setInterval( () => {
       fetchPlayers()
-    }, 60000 );
+    }, 10000 );
   }, [] );
 
   useEffect( () => {
@@ -122,16 +103,6 @@ const App = () => {
       );
     };
 
-    const handleUpdateSettings = () => {
-      console.log( 'SOCKET /updateSettings' );
-      fetchGameSettingsData();
-    };
-
-    const handlePlayersReset = ( players ) => {
-      console.log( 'SOCKET /playersReset', players );
-      setPlayers( players );
-    };
-
     const handleTeamAdded = ( team ) => {
       console.log( 'SOCKET /teamAdded', team );
       setTeams( ( prevTeams ) => {
@@ -156,6 +127,16 @@ const App = () => {
       console.log( 'SOCKET /teamUpdated', teamId );
       fetchTeams();
       socket.emit( 'teamUpdated', teamId );
+    };
+
+    const handlePlayersReset = ( players ) => {
+      console.log( 'SOCKET /playersReset', players );
+      setPlayers( players );
+    };
+
+    const handleUpdateSettings = () => {
+      console.log( 'SOCKET /updateSettings' );
+      fetchGameSettingsData();
     };
 
     socket.connect();
@@ -184,33 +165,33 @@ const App = () => {
   }, [] );
 
   const handleSubmit = async ( e ) => {
-    console.log( "Front/handleSubmit", { name, id, maximumLives } );
+    console.log( "REACT/handleSubmit", { name, id, maximumLives } );
     e.preventDefault();
     await addPlayer( name, id, maximumLives );
     setName( '' );
     setId( '' );
-    console.log( "Front/handleSubmit complete" );
+    console.log( "REACT/handleSubmit complete" );
   };
 
   const handleRemovePlayer = async ( playerId ) => {
-    console.log( "Front/handleRemovePlayer", { playerId } );
+    console.log( "REACT/handleRemovePlayer", { playerId } );
     const removedPlayerId = await removePlayer( playerId );
     socket.emit( 'clientPlayerRemoved', removedPlayerId );
-    console.log( "Front/handleRemovePlayer complete" );
+    console.log( "REACT/handleRemovePlayer complete" );
   };
 
   const handleTeamSubmit = async ( e ) => {
-    console.log( "Front/handleTeamSubmit", { teamName } );
+    console.log( "REACT/handleTeamSubmit", { teamName } );
     e.preventDefault();
     const newTeam = await addTeam( teamName );
     setTeamName( '' );
     fetchTeams();
     socket.emit( 'teamAdded', newTeam );
-    console.log( "Front/handleTeamSubmit complete" );
+    console.log( "REACT/handleTeamSubmit complete" );
   };
 
   const handleEditTeam = async ( id, e ) => {
-    console.log( "Front/handleEditTeam", { id, editingTeamName } );
+    console.log( "REACT/handleEditTeam", { id, editingTeamName } );
     e.preventDefault();
     if ( !editingTeamName ) return;
 
@@ -224,22 +205,26 @@ const App = () => {
     }
 
     setEditingTeam( null );
-
     setEditingTeamName( '' );
+    console.log( "REACT/handleEditTeam complete" );
   };
 
   const handleRemoveTeam = async ( id ) => {
+    console.log( "REACT/handleRemoveTeam", { id } );
     await removeTeam( id );
     fetchTeams();
-
+    console.log( "REACT/handleRemoveTeam complete" );
   };
 
   const fetchTeams = async () => {
+    console.log( "REACT/fetchTeams" );
     const teams = await getTeams();
     setTeams( teams );
+    console.log( "REACT/fetchTeams complete" );
   };
 
   const handleRemoveLife = async ( playerId ) => {
+    console.log( "REACT/handleRemoveLife", { playerId } );
     const player = players.find( ( p ) => p.id === playerId );
 
     if ( player && player.lives <= 0 ) {
@@ -249,9 +234,11 @@ const App = () => {
 
     const updatedPlayer = await removeLife( playerId );
     socket.emit( "clientLivesUpdate", updatedPlayer );
+    console.log( "REACT/handleRemoveLife complete" );
   };
 
   const handleAddLife = async ( playerId ) => {
+    console.log( "REACT/handleAddLife", { playerId } );
     const player = players.find( ( p ) => p.id === playerId );
 
     if ( player && player.lives >= maximumLives ) {
@@ -269,42 +256,7 @@ const App = () => {
     <div>
       <img src="logo.png" className={ style.logo } />
       <div>
-
-        <div className={ style.settings }>
-          <IconButton variant="outlined" onClick={ handleClickOpen }>
-            <SettingsIcon />
-          </IconButton>
-        </div>
-        <Dialog
-          fullScreen={ fullScreen }
-          open={ open }
-          onClose={ handleClose }
-          aria-labelledby="responsive-dialog-title"
-        >
-          <DialogTitle id="responsive-dialog-title">
-            { "PARAMETRES" }
-          </DialogTitle>
-          <DialogContent>
-            <Box width={ 300 }>
-              <br />
-              Nombre de vies maximum : { maximumLives }
-              <Slider value={ maximumLives } min={ 1 }
-                max={ 20 } aria-label="Default" valueLabelDisplay="auto" onChange={ ( e ) => setMaximumLives( parseInt( e.target.value, 10 ) ) } />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button autoFocus onClick={ updateGameSettingsData }>
-              APPLIQUER LA LIMITE
-            </Button>
-            <Button onClick={ resetLivesData } autoFocus>
-              REINITIALISER LES VIES
-            </Button>
-
-            <Button onClick={ handleClose } autoFocus>
-              FERMER
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <Settings />
 
         <br />
 
