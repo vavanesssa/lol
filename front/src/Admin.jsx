@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from 'react';
-
 import * as API from './api';
-
 import socket from './socket';
-
 import { Button, Box, IconButton, TextField, Slider, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, Select, MenuItem, useTheme } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, Edit as EditIcon, DeleteForever as DeleteForeverIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import style from "./styles.module.scss";
 import useMediaQuery from '@mui/material/useMediaQuery';
-
-// Custom components
 import Settings from './Settings';
 import Player from './Player';
 
 const Admin = () => {
-
   const [ teamName, setTeamName ] = useState( '' );
   const [ teams, setTeams ] = useState( [] );
   const [ editingTeam, setEditingTeam ] = useState( '' );
@@ -22,7 +16,6 @@ const Admin = () => {
   const [ editingPlayer, setEditingPlayer ] = useState( '' );
   const [ editingName, setEditingName ] = useState( "" );
   const [ selectedTeam, setSelectedTeam ] = useState( '' );
-
   const [ players, setPlayers ] = useState( [] );
   const [ name, setName ] = useState( '' );
   const [ id, setId ] = useState( '' );
@@ -65,8 +58,6 @@ const Admin = () => {
   const handleEditSubmit = async ( playerId, e ) => {
     e.preventDefault();
     if ( !editingName ) return;
-
-    // Mettre à jour le prénom du joueur avec l'API
     const updatedPlayer = await API.editPlayer( playerId, editingName, selectedTeam );
     if ( updatedPlayer.success ) {
       setPlayers( ( prevPlayers ) =>
@@ -76,7 +67,6 @@ const Admin = () => {
       );
     }
 
-    // Réinitialiser les états d'édition
     setEditingPlayer( '' );
     setEditingName( '' );
     setSelectedTeam( '' );
@@ -198,15 +188,10 @@ const Admin = () => {
     const handlePlayerAdded = ( player ) => {
       console.log( 'SOCKET /playerAdded', player );
       setPlayers( prevPlayers => {
-        // Check if the player already exists in the players array
         const existingPlayer = prevPlayers.find( prevPlayer => prevPlayer.id === player.id );
-
-        // If the player doesn't exist, add the new player to the array
         if ( !existingPlayer ) {
           return [ ...prevPlayers, player ];
         }
-
-        // Otherwise, return the unmodified players array
         return prevPlayers;
       } );
     };
