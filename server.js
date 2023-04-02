@@ -7,7 +7,7 @@ const app = express()
 const uuidv4 = require( 'uuid' ).v4;
 const path = require( 'path' );
 const PORT = process.env.PORT || 3001
-
+const errorHandler = require( './utils/errorHandler.js' );
 // MongoDB connection
 const MONGODB_URI =
   'mongodb+srv://lol:lol@cluster0.e7mbqki.mongodb.net/?retryWrites=true&w=majority'
@@ -17,13 +17,13 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   } )
-  .then( () => logger( 'MongoDB connected' ) )
+  .then( () => logger( '✅ Base de données MongoDB connectée' ) )
   .catch( ( err ) => logger( err ) )
 
 const gameSettingsSchema = new mongoose.Schema( {
   maximumLives: { type: Number, default: 10 },
 } );
-
+let activeUsers = 0;
 const GameSettings = mongoose.model( "GameSettings", gameSettingsSchema );
 const playerSchema = new mongoose.Schema( {
   name: String,
@@ -43,11 +43,11 @@ const Team = mongoose.model( 'Team', teamSchema );
 // App Middlewares
 app.use( cors() )
 app.use( express.json() )
-
+app.use( errorHandler );
 app.use( express.static( path.join( __dirname, 'front', 'dist' ) ) );
 
 const server = app.listen( PORT, () => {
-  logger( `Server running on port ${PORT}` )
+  logger( `✅ Serveur démarré (port ${PORT})` )
 } )
 
 //Socket Init
@@ -59,21 +59,25 @@ const io = new Server( server, {
 path: '/socket',
 
 io.on( 'connection', ( socket ) => {
-  logger( 'Client connected' )
+  activeUsers++; // Incrémenter le nombre d'utilisateurs actifs
+  logger( `🟢 Utilisateur connecté. Total des utilisateurs connectés : ${activeUsers}` );
+
   socket.on( 'disconnect', () => {
-    logger( 'Client disconnected' )
-  } )
-} )
+
+    activeUsers--; // Décrémenter le nombre d'utilisateurs actifs
+    logger( `🔴 Utilisateur déconnecté. Total des utilisateurs connectés : ${activeUsers}` );
+  } );
+} );
 
 // API
 app.get( '/api/getplayers', async ( req, res ) => {
   try {
     const players = await Player.find();
     res.json( players );
-    logger( ` GET / getplayers - Retrieved ${players.length} players ` );
+    // logger( ` GET / getplayers - Retrieved ${players.length} players ` );
   } catch ( err ) {
     logger( `Error: ${err} ` );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -86,7 +90,7 @@ app.get( '/api/getplayers/:playerid', async ( req, res ) => {
     res.json( player );
   } catch ( err ) {
     logger( err );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -101,7 +105,7 @@ app.post( '/api/addplayer', async ( req, res ) => {
     logger( `POST /addplayer - Added player: ${name}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -119,7 +123,7 @@ app.post( '/api/editplayer', async ( req, res ) => {
     logger( `POST /editplayer - Updated player: ${name} ` );
   } catch ( err ) {
     logger( `Error: ${err}` );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -132,7 +136,7 @@ app.post( '/api/removeplayer', async ( req, res ) => {
     logger( `POST /removeplayer - Removed player: ${player.name}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -149,7 +153,7 @@ app.post( '/api/updateteam', async ( req, res ) => {
     res.json( player );
   } catch ( err ) {
     logger( err );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -166,7 +170,7 @@ app.post( "/api/removelive", async ( req, res ) => {
     logger( `POST /removelive - Removed live from ${player.name} , lives left: ${player.lives}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -184,12 +188,12 @@ app.post( "/api/addlive", async ( req, res ) => {
     logger( `POST / addlive - Added live to ${player.name} , lives left: ${player.lives} ` );
   } catch ( err ) {
     logger( `Error: ${err} ` );
-    res.status( 500 ).json( { error: "Internal Server Error" } );
+    return res.status( 500 ).json( { error: "Internal Server Error" } );
   }
 } );
 
 app.get( "/api/getsettings", async ( req, res ) => {
-  logger( "GET /getsettings" );
+  // logger( "GET /getsettings" );
   try {
     let settings = await GameSettings.findOne();
     if ( !settings ) {
@@ -199,7 +203,7 @@ app.get( "/api/getsettings", async ( req, res ) => {
     res.json( settings );
   } catch ( err ) {
     logger( err );
-    res.status( 500 ).json( { error: "Internal Server Error" } );
+    return res.status( 500 ).json( { error: "Internal Server Error" } );
   }
 } );
 
@@ -217,7 +221,7 @@ app.post( "/api/updatesettings", async ( req, res ) => {
     logger( `POST /updatesettings - maximumLives set to ${maximumLives}` );
   } catch ( err ) {
     logger( `Error: ${err}` )
-    res.status( 500 ).json( { error: "Internal Server Error" } );
+    return res.status( 500 ).json( { error: "Internal Server Error" } );
   }
 } );
 
@@ -231,7 +235,7 @@ app.post( '/api/resetlives', async ( req, res ) => {
     res.json( players );
   } catch ( err ) {
     logger( err );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -260,7 +264,7 @@ app.post( '/api/addteam', async ( req, res ) => {
     logger( `POST /addTeam - Added Team: ${name}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -275,7 +279,7 @@ app.post( '/api/addteam', async ( req, res ) => {
 //     logger( `POST /addteam - Added team: ${name}` );
 //   } catch ( err ) {
 //     logger( `Error: ${err}` );
-//     res.status( 500 ).json( { error: 'Internal Server Error' } );
+//     return res.status( 500 ).json( { error: 'Internal Server Error' } );
 //   }
 // } );
 
@@ -283,10 +287,10 @@ app.get( '/api/getteams', async ( req, res ) => {
   try {
     const teams = await Team.find();
     res.json( teams );
-    logger( `GET /getteams - Retrieved ${teams.length} teams` );
+    // logger( `GET /getteams - Retrieved ${teams.length} teams` );
   } catch ( err ) {
     logger( `Error: ${err}` );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -304,7 +308,7 @@ app.post( '/api/editteam', async ( req, res ) => {
     logger( `POST /editteam - Updated team: ${name}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
@@ -317,9 +321,9 @@ app.post( '/api/removeteam', async ( req, res ) => {
     logger( `POST /removeteam - Removed team: ${team.name}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
-    res.status( 500 ).json( { error: 'Internal Server Error' } );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
 const routes = app._router.stack.filter( ( r ) => r.route ).map( ( r ) => r.route.path + '\n' );
-console.log( `MDR API'S:\n${routes.join( '' )}` );
+console.log( `🟨 Liste des API:\n${routes.join( '' )}` );
