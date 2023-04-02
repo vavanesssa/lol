@@ -70,6 +70,20 @@ io.on( 'connection', ( socket ) => {
 } );
 
 // API
+
+app.get( '/api/game', async ( req, res ) => {
+  try {
+    const players = await Player.find();
+    const settings = await GameSettings.findOne();
+    const teams = await Team.find();
+    res.json( { players, settings, teams } );
+    // logger(` GET / game - Retrieved ${players.length} players, ${teams.length} teams, and game settings`);
+  } catch ( err ) {
+    logger( `Error: ${err} ` );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
 app.get( '/api/getplayers', async ( req, res ) => {
   try {
     const players = await Player.find();

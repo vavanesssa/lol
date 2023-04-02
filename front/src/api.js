@@ -2,6 +2,13 @@ const API_URL = import.meta.env.VITE_API + "/api";
 
 console.log( "API_URL", API_URL );
 
+export async function getGame () {
+  console.log( "API /getGame" );
+  const response = await fetch( `${API_URL}/getgame` );
+  console.log( "getGame response", response );
+  return response.json();
+}
+
 export async function getPlayers () {
   console.log( "API /getPlayers" );
   const response = await fetch( `${API_URL}/getplayers` );

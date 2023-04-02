@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife, editPlayer, addTeam, getTeams, editTeam, removeTeam } from './api';
+
+import * as API from './api';
 
 import socket from './socket';
 
@@ -10,6 +11,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 // Custom components
 import Settings from './Settings';
+import Player from './Player';
 
 const Admin = () => {
 
@@ -28,16 +30,36 @@ const Admin = () => {
   const [ searchQuery, setSearchQuery ] = useState( "" );
   const theme = useTheme();
 
-  const fetchPlayers = async () => {
-    console.log( 'REACT/ fetching players' )
-    const initialPlayers = await getPlayers();
+  const fetchGame = async () => {
+    console.log( 'REACT/ fetching game' )
+    const initialPlayers = await API.getPlayers();
     setPlayers( initialPlayers );
   };
 
-  const fetchGameSettingsData = async () => {
+  const fetchPlayers = async () => {
+    console.log( 'REACT/ fetching players' )
+    const initialPlayers = await API.getPlayers();
+    setPlayers( initialPlayers );
+  };
+
+  const fetchGameSettings = async () => {
     console.log( 'REACT/ fetching game settings' );
-    const settings = await fetchGameSettings();
+    const settings = await API.fetchGameSettings();
     setMaximumLives( settings.maximumLives );
+  };
+
+  const fetchTeams = async () => {
+    console.log( "REACT/fetchTeams" );
+    const teams = await API.getTeams();
+    setTeams( teams );
+    console.log( "REACT/fetchTeams complete" );
+  };
+
+  const fetchAllData = () => {
+    fetchGameSettings(),
+      fetchTeams(),
+      fetchPlayers(),
+      console.log( "REACT/fetchAllData complete" );
   };
 
   const handleEditSubmit = async ( playerId, e ) => {
@@ -45,7 +67,7 @@ const Admin = () => {
     if ( !editingName ) return;
 
     // Mettre à jour le prénom du joueur avec l'API
-    const updatedPlayer = await editPlayer( playerId, editingName, selectedTeam );
+    const updatedPlayer = await API.editPlayer( playerId, editingName, selectedTeam );
     if ( updatedPlayer.success ) {
       setPlayers( ( prevPlayers ) =>
         prevPlayers.map( ( player ) =>
@@ -65,10 +87,108 @@ const Admin = () => {
     return fullName.includes( searchQuery.toLowerCase() );
   } );
 
+  const PlayerItem = ( { player } ) => {
+    return (
+      <li className={ style.list } key={ player.id }>
+        <div className={ style.userActions }>
+          <IconButton
+            color="secondary"
+            aria-label="edit"
+            onClick={ () => {
+              setEditingPlayer( player.id );
+              setEditingName( player.name );
+            } }
+          >
+            <EditIcon />
+          </IconButton>
+
+          <IconButton onClick={ () => handleRemovePlayer( player.id ) } color="secondary" aria-label="add an alarm">
+            <DeleteForeverIcon />
+          </IconButton>
+          <IconButton onClick={ () => handleRemoveLife( player.id ) } color="secondary" aria-label="add an alarm">
+            <RemoveIcon />
+          </IconButton>
+          <IconButton onClick={ () => handleAddLife( player.id ) } color="secondary" aria-label="add an alarm">
+            <AddIcon />
+          </IconButton>
+        </div>
+        <span>
+          { Array( player.lives )
+            .fill()
+            .map( ( _, index ) => (
+              <img src="laugh.png" alt="emoji" className={ style.emoji } key={ index } />
+            ) ) }
+          <span style={ { opacity: 0.3 } }>
+            { maximumLives - player.lives > 0
+              ? Array( maximumLives - player.lives )
+                .fill()
+                .map( ( _, index ) => (
+                  <img src="laugh.png" alt="emoji" className={ style.emoji } key={ index } />
+                ) )
+              : "" }
+          </span>
+
+          <span className={ player.lives == 0 ? style.dead : style.username }>
+            { editingPlayer === player.id ? (
+              <form onSubmit={ ( e ) => handleEditSubmit( player.id, e ) }>
+                <TextField
+                  value={ editingName }
+                  onChange={ ( e ) => setEditingName( e.target.value ) }
+                  size="small"
+                  autoFocus
+                />
+
+                <FormControl variant="outlined" size="small">
+                  <InputLabel htmlFor="team-selector">Équipe</InputLabel>
+                  <Select
+                    native
+                    value={ selectedTeam }
+                    onChange={ ( e ) => setSelectedTeam( e.target.value ) }
+                    label="Équipe"
+                    inputProps={ {
+                      name: 'team',
+                      id: 'team-selector',
+                    } }
+                    style={ { minWidth: '150px', marginLeft: '10px' } }
+                  >
+                    <option aria-label="None" value="" />
+                    { teams.map( ( team ) => (
+                      <option key={ team.id } value={ team.id }>{ team.name }</option>
+                    ) ) }
+                  </Select>
+                </FormControl>
+
+                <Button type="submit" variant="outlined">
+                  Modifier
+                </Button>
+                <Button
+                  onClick={ () => {
+                    setEditingPlayer( "" );
+                    setEditingName( "" );
+                  } }
+                >
+                  Annuler
+                </Button>
+              </form>
+            ) : (
+              <div>
+                { player.name } { player.teamID && teams.find( ( team ) => team.id === player.teamID )?.name }
+              </div>
+
+            ) }
+          </span>
+
+        </span>
+
+      </li>
+    )
+  }
+
   useEffect( () => {
-    fetchPlayers();
-    fetchGameSettingsData();
+
+    fetchGameSettings();
     fetchTeams();
+    fetchPlayers();
     setInterval( () => {
       fetchPlayers()
     }, 10000 );
@@ -136,7 +256,7 @@ const Admin = () => {
 
     const handleUpdateSettings = () => {
       console.log( 'SOCKET /updateSettings' );
-      fetchGameSettingsData();
+      fetchGameSettings();
     };
 
     socket.connect();
@@ -167,7 +287,7 @@ const Admin = () => {
   const handleSubmit = async ( e ) => {
     console.log( "REACT/handleSubmit", { name, id, maximumLives } );
     e.preventDefault();
-    await addPlayer( name, id, maximumLives );
+    await API.addPlayer( name, id, maximumLives );
     setName( '' );
     setId( '' );
     console.log( "REACT/handleSubmit complete" );
@@ -175,7 +295,7 @@ const Admin = () => {
 
   const handleRemovePlayer = async ( playerId ) => {
     console.log( "REACT/handleRemovePlayer", { playerId } );
-    const removedPlayerId = await removePlayer( playerId );
+    const removedPlayerId = await API.removePlayer( playerId );
     socket.emit( 'clientPlayerRemoved', removedPlayerId );
     console.log( "REACT/handleRemovePlayer complete" );
   };
@@ -183,7 +303,7 @@ const Admin = () => {
   const handleTeamSubmit = async ( e ) => {
     console.log( "REACT/handleTeamSubmit", { teamName } );
     e.preventDefault();
-    const newTeam = await addTeam( teamName );
+    const newTeam = await API.addTeam( teamName );
     setTeamName( '' );
     fetchTeams();
     socket.emit( 'teamAdded', newTeam );
@@ -195,7 +315,7 @@ const Admin = () => {
     e.preventDefault();
     if ( !editingTeamName ) return;
 
-    const updatedTeam = await editTeam( id, editingTeamName );
+    const updatedTeam = await API.editTeam( id, editingTeamName );
     if ( updatedTeam.success ) {
       setTeams( ( prevTeams ) =>
         prevTeams.map( ( team ) =>
@@ -211,16 +331,9 @@ const Admin = () => {
 
   const handleRemoveTeam = async ( id ) => {
     console.log( "REACT/handleRemoveTeam", { id } );
-    await removeTeam( id );
+    await API.removeTeam( id );
     fetchTeams();
     console.log( "REACT/handleRemoveTeam complete" );
-  };
-
-  const fetchTeams = async () => {
-    console.log( "REACT/fetchTeams" );
-    const teams = await getTeams();
-    setTeams( teams );
-    console.log( "REACT/fetchTeams complete" );
   };
 
   const handleRemoveLife = async ( playerId ) => {
@@ -232,7 +345,7 @@ const Admin = () => {
       return;
     }
 
-    const updatedPlayer = await removeLife( playerId );
+    const updatedPlayer = await API.removeLife( playerId );
     socket.emit( "clientLivesUpdate", updatedPlayer );
     console.log( "REACT/handleRemoveLife complete" );
   };
@@ -246,11 +359,9 @@ const Admin = () => {
       return;
     }
 
-    const updatedPlayer = await addLife( playerId );
+    const updatedPlayer = await API.addLife( playerId );
     socket.emit( "clientLivesUpdate", updatedPlayer );
   };
-
-  // MUI
 
   return (
     <div>
@@ -329,101 +440,12 @@ const Admin = () => {
       </label>
       <ul className={ style.listwrapper }>
         { filteredPlayers.map( ( player ) => (
-          <li className={ style.list } key={ player.id }>
-            <div className={ style.userActions }>
-              <IconButton
-                color="secondary"
-                aria-label="edit"
-                onClick={ () => {
-                  setEditingPlayer( player.id );
-                  setEditingName( player.name );
-                } }
-              >
-                <EditIcon />
-              </IconButton>
 
-              <IconButton onClick={ () => handleRemovePlayer( player.id ) } color="secondary" aria-label="add an alarm">
-                <DeleteForeverIcon />
-              </IconButton>
-              <IconButton onClick={ () => handleRemoveLife( player.id ) } color="secondary" aria-label="add an alarm">
-                <RemoveIcon />
-              </IconButton>
-              <IconButton onClick={ () => handleAddLife( player.id ) } color="secondary" aria-label="add an alarm">
-                <AddIcon />
-              </IconButton>
-            </div>
-            <span>
-              { Array( player.lives )
-                .fill()
-                .map( ( _, index ) => (
-                  <img src="laugh.png" alt="emoji" className={ style.emoji } key={ index } />
-                ) ) }
-              <span style={ { opacity: 0.3 } }>
-                { maximumLives - player.lives > 0
-                  ? Array( maximumLives - player.lives )
-                    .fill()
-                    .map( ( _, index ) => (
-                      <img src="laugh.png" alt="emoji" className={ style.emoji } key={ index } />
-                    ) )
-                  : "" }
-              </span>
+          <PlayerItem player={ player } />
 
-              <span className={ player.lives == 0 ? style.dead : style.username }>
-                { editingPlayer === player.id ? (
-                  <form onSubmit={ ( e ) => handleEditSubmit( player.id, e ) }>
-                    <TextField
-                      value={ editingName }
-                      onChange={ ( e ) => setEditingName( e.target.value ) }
-                      size="small"
-                      autoFocus
-                    />
-
-                    <FormControl variant="outlined" size="small">
-                      <InputLabel htmlFor="team-selector">Équipe</InputLabel>
-                      <Select
-                        native
-                        value={ selectedTeam }
-                        onChange={ ( e ) => setSelectedTeam( e.target.value ) }
-                        label="Équipe"
-                        inputProps={ {
-                          name: 'team',
-                          id: 'team-selector',
-                        } }
-                        style={ { minWidth: '150px', marginLeft: '10px' } }
-                      >
-                        <option aria-label="None" value="" />
-                        { teams.map( ( team ) => (
-                          <option key={ team.id } value={ team.id }>{ team.name }</option>
-                        ) ) }
-                      </Select>
-                    </FormControl>
-
-                    <Button type="submit" variant="outlined">
-                      Modifier
-                    </Button>
-                    <Button
-                      onClick={ () => {
-                        setEditingPlayer( "" );
-                        setEditingName( "" );
-                      } }
-                    >
-                      Annuler
-                    </Button>
-                  </form>
-                ) : (
-                  <div>
-                    { player.name } { player.teamID && teams.find( ( team ) => team.id === player.teamID )?.name }
-                  </div>
-
-                ) }
-              </span>
-
-            </span>
-
-          </li>
         ) ) }
-
       </ul>
+
     </div>
   );
 };
