@@ -80,28 +80,7 @@ const Admin = () => {
   const PlayerItem = ( { player } ) => {
     return (
       <li className={ style.list } key={ player.id }>
-        <div className={ style.userActions }>
-          <IconButton
-            color="secondary"
-            aria-label="edit"
-            onClick={ () => {
-              setEditingPlayer( player.id );
-              setEditingName( player.name );
-            } }
-          >
-            <EditIcon />
-          </IconButton>
 
-          <IconButton onClick={ () => handleRemovePlayer( player.id ) } color="secondary" aria-label="add an alarm">
-            <DeleteForeverIcon />
-          </IconButton>
-          <IconButton onClick={ () => handleRemoveLife( player.id ) } color="secondary" aria-label="add an alarm">
-            <RemoveIcon />
-          </IconButton>
-          <IconButton onClick={ () => handleAddLife( player.id ) } color="secondary" aria-label="add an alarm">
-            <AddIcon />
-          </IconButton>
-        </div>
         <span>
           { Array( player.lives )
             .fill()
@@ -352,69 +331,7 @@ const Admin = () => {
     <div>
       <img src="logo.png" className={ style.logo } /> { selectedTeam }
       <div>
-        <Settings />
-
-        <br />
-
       </div>
-
-      <form onSubmit={ handleTeamSubmit }>
-        <TextField
-          size="small"
-          value={ teamName }
-          onChange={ ( e ) => setTeamName( e.target.value ) }
-          id="outlined-basic"
-          label="Nom de l'équipe"
-          variant="outlined"
-        />
-        <Button type="submit" variant="outlined">
-          Ajouter une équipe
-        </Button>
-      </form>
-      { teams.map( ( team ) => (
-        <div key={ team.id }>
-          <h2>
-            { editingTeam === team.id ? (
-              <form onSubmit={ ( e ) => handleEditTeam( team.id, e ) }>
-                <TextField
-                  value={ editingTeamName }
-                  onChange={ ( e ) => setEditingTeamName( e.target.value ) }
-                  size="small"
-                  autoFocus
-                />
-                <Button type="submit" variant="outlined">
-                  Modifier
-                </Button>
-                <Button
-                  onClick={ () => {
-                    setEditingTeam( '' );
-                    setEditingTeamName( "" );
-                  } }
-                >
-                  Annuler
-                </Button>
-              </form>
-            ) : (
-              <>
-                { team.name }{ " " }
-                <IconButton onClick={ () => setEditingTeam( team.id ) }>
-                  <EditIcon />
-                </IconButton>
-              </>
-            ) }
-          </h2>
-          <Button onClick={ () => handleRemoveTeam( team.id ) }>Remove</Button>
-          <span>{ team.key }</span>
-        </div>
-      ) ) }
-
-      <form onSubmit={ handleSubmit }>
-        <br />
-
-        <TextField size="small" value={ name } onChange={ ( e ) => setName( e.target.value ) } id="outlined-basic" label="Prénom" variant="outlined" />
-
-        <Button type="submit" variant="outlined">Ajouter un joueur</Button>
-      </form>
 
       <label>
         <br />

@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3001
 const errorHandler = require( './utils/errorHandler.js' );
 // MongoDB connection
 const MONGODB_URI =
-  'mongodb+srv://localhost:localhost@localhost.bs3q0.mongodb.net/?retryWrites=true&w=majority'
+  'mongodb+srv://lol:lol@cluster0.e7mbqki.mongodb.net/?retryWrites=true&w=majority'
 mongoose.set( 'strictQuery', false )
 mongoose
   .connect( MONGODB_URI, {
