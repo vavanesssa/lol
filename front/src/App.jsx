@@ -11,7 +11,7 @@ import PlayerView from './PlayerView';
 const router = createBrowserRouter( [
   {
     path: "/",
-    element: <Admin />,
+    element: <PlayerView />,
     errorElement: <ErrorPage />,
   },
   {

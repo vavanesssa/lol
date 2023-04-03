@@ -8,7 +8,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import Settings from './Settings';
 import Player from './PlayerView';
 
-const Admin = () => {
+const PlayerView = () => {
   const [ teamName, setTeamName ] = useState( '' );
   const [ teams, setTeams ] = useState( [] );
   const [ editingTeam, setEditingTeam ] = useState( '' );
@@ -100,44 +100,7 @@ const Admin = () => {
           <span className={ player.lives == 0 ? style.dead : style.username }>
             { editingPlayer === player.id ? (
               <form onSubmit={ ( e ) => handleEditSubmit( player.id, e ) }>
-                <TextField
-                  value={ editingName }
-                  onChange={ ( e ) => setEditingName( e.target.value ) }
-                  size="small"
-                  autoFocus
-                />
 
-                <FormControl variant="outlined" size="small">
-                  <InputLabel htmlFor="team-selector">Équipe</InputLabel>
-                  <Select
-                    native
-                    value={ selectedTeam }
-                    onChange={ ( e ) => setSelectedTeam( e.target.value ) }
-                    label="Équipe"
-                    inputProps={ {
-                      name: 'team',
-                      id: 'team-selector',
-                    } }
-                    style={ { minWidth: '150px', marginLeft: '10px' } }
-                  >
-                    <option aria-label="None" value="" />
-                    { teams.map( ( team ) => (
-                      <option key={ team.id } value={ team.id }>{ team.name }</option>
-                    ) ) }
-                  </Select>
-                </FormControl>
-
-                <Button type="submit" variant="outlined">
-                  Modifier
-                </Button>
-                <Button
-                  onClick={ () => {
-                    setEditingPlayer( "" );
-                    setEditingName( "" );
-                  } }
-                >
-                  Annuler
-                </Button>
               </form>
             ) : (
               <div>
@@ -352,4 +315,4 @@ const Admin = () => {
   );
 };
 
-export default Admin;
+export default PlayerView;
