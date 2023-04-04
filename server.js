@@ -20,6 +20,21 @@ mongoose
   .then( () => logger( '✅ Base de données MongoDB connectée' ) )
   .catch( ( err ) => logger( err ) )
 
+const History = mongoose.model( 'History', new mongoose.Schema( {
+  log: String,
+  createdAt: { type: Date, default: Date.now },
+} ) );
+
+const historyLog = async ( log ) => {
+  try {
+    io.emit( 'history', log );
+    const newLog = new History( { log } );
+    await newLog.save();
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+  }
+}
+
 const gameSettingsSchema = new mongoose.Schema( {
   maximumLives: { type: Number, default: 10 },
 } );
@@ -108,6 +123,29 @@ app.get( '/api/getplayers/:playerid', async ( req, res ) => {
   }
 } );
 
+app.post( '/api/addhistory', async ( req, res ) => {
+  const { log } = req.body;
+  try {
+    const newLog = new HistoryLog( { log } );
+    await newLog.save();
+    res.json( newLog );
+    logger( `POST /history - Added log: ${log}` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
+app.get( '/api/gethistory', async ( req, res ) => {
+  try {
+    const history = await History.find().sort( { createdAt: -1 } );
+    res.json( history );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
 app.post( '/api/addplayer', async ( req, res ) => {
   const { name, lives } = req.body;
   try {
@@ -117,6 +155,7 @@ app.post( '/api/addplayer', async ( req, res ) => {
     io.emit( 'playerAdded', newPlayer );
     res.json( newPlayer );
     logger( `POST /addplayer - Added player: ${name}` );
+    historyLog( `${name} a été ajouté au jeu` )
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -135,6 +174,7 @@ app.post( '/api/editplayer', async ( req, res ) => {
     io.emit( 'playerUpdated', player );
     res.json( player );
     logger( `POST /editplayer - Updated player: ${name} ` );
+
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -148,6 +188,7 @@ app.post( '/api/removeplayer', async ( req, res ) => {
     io.emit( 'playerRemoved', id );
     res.json( player );
     logger( `POST /removeplayer - Removed player: ${player.name}` );
+    historyLog( `${player.name} a été supprimé du jeu` )
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -182,6 +223,12 @@ app.post( "/api/removelive", async ( req, res ) => {
     }
     res.json( player );
     logger( `POST /removelive - Removed live from ${player.name} , lives left: ${player.lives}` );
+    if ( player.lives === 0 ) {
+      historyLog( `${player.name} a perdu la partie.` )
+    } else {
+      historyLog( `${player.name} a perdu une vie : ${player.lives} vies restantes.` )
+    }
+
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -198,6 +245,7 @@ app.post( "/api/addlive", async ( req, res ) => {
       await player.save();
       io.emit( "livesUpdated", player );
     }
+    historyLog( `${player.name} a gagné une vie :  ${player.lives} vies restantes. ` )
     res.json( player );
     logger( `POST / addlive - Added live to ${player.name} , lives left: ${player.lives} ` );
   } catch ( err ) {
@@ -232,6 +280,7 @@ app.post( "/api/updatesettings", async ( req, res ) => {
     await settings.save();
     res.json( settings );
     io.emit( "updateSettings" );
+    historyLog( `Changement des régles du jeu : ${maximumLives} vies maximum par joueur ` )
     logger( `POST /updatesettings - maximumLives set to ${maximumLives}` );
   } catch ( err ) {
     logger( `Error: ${err}` )
@@ -246,6 +295,7 @@ app.post( '/api/resetlives', async ( req, res ) => {
     await Player.updateMany( {}, { $set: { lives: maximumLives } } );
     const players = await Player.find();
     io.emit( 'playersReset', players );
+    historyLog( `Remise à zéro de la partie, tous les joueurs ont le maximum de vies (${maximumLives}) ` )
     res.json( players );
   } catch ( err ) {
     logger( err );

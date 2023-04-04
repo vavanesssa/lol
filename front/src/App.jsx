@@ -7,6 +7,7 @@ import {
 import Admin from './Admin';
 import ErrorPage from './ErrorPage';
 import PlayerView from './PlayerView';
+import History from './History';
 
 const router = createBrowserRouter( [
   {
@@ -17,6 +18,17 @@ const router = createBrowserRouter( [
   {
     path: "/players",
     element: <PlayerView />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/history",
+    element: <History />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/history",
+    element: <History />,
+    errorElement: <ErrorPage />,
   },
 ] );
 const App = () => {

@@ -16,6 +16,20 @@ export async function getPlayers () {
   return response.json();
 }
 
+export async function getHistory () {
+  console.log( "API /getHistory" );
+  const response = await fetch( `${API_URL}/gethistory` );
+  console.log( "getHistory response", response );
+  return response.json();
+}
+
+export async function addHistory () {
+  console.log( "API /addhistory" );
+  const response = await fetch( `${API_URL}/addhistory` );
+  console.log( "addhistory response", response );
+  return response.json();
+}
+
 export async function addLife ( playerId ) {
   console.log( "API /addLife", playerId );
   const response = await fetch( `${API_URL}/addlive`, {
@@ -94,6 +108,7 @@ export async function resetLives ( maximumLives ) {
   console.log( "resetLives response", response );
   return response.json();
 }
+
 export async function removePlayer ( playerId ) {
   console.log( "API /removePlayer", playerId );
   const response = await fetch( `${API_URL}/removeplayer`, {
