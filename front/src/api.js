@@ -16,6 +16,13 @@ export async function getPlayers () {
   return response.json();
 }
 
+export async function getPlayer (id) {
+  console.log( "API /getPlayers" );
+  const response = await fetch( `${API_URL}/getplayer/${id}` );
+  console.log( "getPlayer response", response );
+  return response.json();
+}
+
 export async function addLife ( playerId ) {
   console.log( "API /addLife", playerId );
   const response = await fetch( `${API_URL}/addlive`, {
@@ -161,6 +168,15 @@ export async function getTeams () {
   const teams = await response.json();
   console.log( "API /getTeams response", teams );
   return teams;
+}
+
+export async function getTeam (id) {
+  console.log( "API /getTeam" );
+  const response = await fetch( `${API_URL}/getteam/${id}` );
+
+  const team = await response.json();
+  console.log( "API /getTeam response", team );
+  return team;
 }
 
 export async function editTeam ( id, newName ) {

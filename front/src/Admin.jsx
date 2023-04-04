@@ -12,6 +12,7 @@ import 'ag-grid-enterprise';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import './style.css';
+import { Team } from './Team';
 
 const Admin = () => {
   const [ game, setGame ] = useState();
@@ -68,6 +69,7 @@ const Admin = () => {
   };
 
   const handleEditSubmit = async ( playerId, e ) => {
+    console.log("user submit ", e.target.value,e.target[0].value,e)
     e.preventDefault();
     if ( !editingName ) return;
     const updatedPlayer = await API.editPlayer( playerId, editingName, selectedTeam );
@@ -88,103 +90,6 @@ const Admin = () => {
     const fullName = `${player.name}`.toLowerCase();
     return fullName.includes( searchQuery.toLowerCase() );
   } );
-
-  const PlayerItem = ( { player } ) => {
-    return (
-      <li className={ style.list } key={ player.id }>
-        <div className={ style.userActions }>
-          <IconButton
-            color="secondary"
-            aria-label="edit"
-            onClick={ () => {
-              setEditingPlayer( player.id );
-              setEditingName( player.name );
-            } }
-          >
-            <EditIcon />
-          </IconButton>
-
-          <IconButton onClick={ () => handleRemovePlayer( player.id ) } color="secondary" aria-label="add an alarm">
-            <DeleteForeverIcon />
-          </IconButton>
-          <IconButton onClick={ () => handleRemoveLife( player.id ) } color="secondary" aria-label="add an alarm">
-            <RemoveIcon />
-          </IconButton>
-          <IconButton onClick={ () => handleAddLife( player.id ) } color="secondary" aria-label="add an alarm">
-            <AddIcon />
-          </IconButton>
-        </div>
-        <span>
-          { Array( player.lives )
-            .fill()
-            .map( ( _, index ) => (
-              <img src="laugh.png" alt="emoji" className={ style.emoji } key={ index } />
-            ) ) }
-          <span style={ { opacity: 0.3 } }>
-            { maximumLives - player.lives > 0
-              ? Array( maximumLives - player.lives )
-                .fill()
-                .map( ( _, index ) => (
-                  <img src="laugh.png" alt="emoji" className={ style.emoji } key={ index } />
-                ) )
-              : "" }
-          </span>
-
-          <span className={ player.lives == 0 ? style.dead : style.username }>
-            { editingPlayer === player.id ? (
-              <form onSubmit={ ( e ) => handleEditSubmit( player.id, e ) }>
-                <TextField
-                  value={ editingName }
-                  onChange={ ( e ) => setEditingName( e.target.value ) }
-                  size="small"
-                  autoFocus
-                />
-
-                <FormControl variant="outlined" size="small">
-                  <InputLabel htmlFor="team-selector">Équipe</InputLabel>
-                  <Select
-                    native
-                    value={ selectedTeam }
-                    onChange={ ( e ) => setSelectedTeam( e.target.value ) }
-                    label="Équipe"
-                    inputProps={ {
-                      name: 'team',
-                      id: 'team-selector',
-                    } }
-                    style={ { minWidth: '150px', marginLeft: '10px' } }
-                  >
-                    <option aria-label="None" value="" />
-                    { teams.map( ( team ) => (
-                      <option key={ team.id } value={ team.id }>{ team.name }</option>
-                    ) ) }
-                  </Select>
-                </FormControl>
-
-                <Button type="submit" variant="outlined">
-                  Modifier
-                </Button>
-                <Button
-                  onClick={ () => {
-                    setEditingPlayer( "" );
-                    setEditingName( "" );
-                  } }
-                >
-                  Annuler
-                </Button>
-              </form>
-            ) : (
-              <div>
-                { player.name } { player.teamID && teams.find( ( team ) => team.id === player.teamID )?.name }
-              </div>
-
-            ) }
-          </span>
-
-        </span>
-
-      </li>
-    )
-  }
 
   useEffect( () => {
     fetchGaming();
@@ -361,11 +266,11 @@ const Admin = () => {
   };
 
   /****************AG-GRID****************************************************************************/
-  const gameSetting = {"players":[{"_id":"642b0885321b61d5db5de379","name":"Lucie","id":"c48f8645-4302-4308-8dfe-60f4e4c9561d","teamID":"8b030b29-cba5-4946-b7ca-1272d9b0fd51","lives":3,"__v":0},{"_id":"642b088c321b61d5db5de37d","name":"Va","id":"ff10c867-c21a-4fef-bcdf-0e2cb3c0c1a3","teamID":"d61baa6a-1950-471d-8468-975e11bfd7b1","lives":3,"__v":0},{"_id":"642b088c321b61d5db5de67p","name":"Charlotte","id":"ff10c867-c21a-4fef-bcdf-0e2cb3c0c1a3","teamID":"d61baa6a-1950-471d-8468-975e11bfd7b1","lives":3,"__v":0}],"settings":{"_id":"642b0827321b61d5db5de34a","maximumLives":3,"__v":0},"teams":[{"_id":"642b08b1321b61d5db5de3a1","name":"AAAA","id":"d61baa6a-1950-471d-8468-975e11bfd7b1","createdAt":"2023-04-03T17:11:13.742Z","__v":0},{"_id":"642b08b5321b61d5db5de3a6","name":"222é","id":"8b030b29-cba5-4946-b7ca-1272d9b0fd51","createdAt":"2023-04-03T17:11:17.244Z","__v":0}]};
+  const gameSetting = {"players":[{"_id":"642b0885321b61d5db5de379","name":"Lucie","id":"c48f8645-4302-4308-8dfe-60f4e4c9561d","teamID":"8b030b29-cba5-4946-b7ca-1272d9b0fd51","lives":3,"__v":0},{"_id":"642b088c321b61d5db5de37d","name":"Va","id":"ff10c867-c21a-4fef-bcdf-0e2cb3c0c1a3","teamID":"d61baa6a-1950-471d-8468-975e11bfd7b1","lives":3,"__v":0},{"_id":"642b088c321b61d5db5de67p","name":"Charlotte","id":"ff10c867-c21a-4fef-bcdf-0e2cb3c0c2zr","teamID":"d61baa6a-1950-471d-8468-975e11bfd7b1","lives":3,"__v":0}],"settings":{"_id":"642b0827321b61d5db5de34a","maximumLives":3,"__v":0},"teams":[{"_id":"642b08b1321b61d5db5de3a1","name":"AAAA","id":"d61baa6a-1950-471d-8468-975e11bfd7b1","createdAt":"2023-04-03T17:11:13.742Z","__v":0},{"_id":"642b08b5321b61d5db5de3a6","name":"222é","id":"8b030b29-cba5-4946-b7ca-1272d9b0fd51","createdAt":"2023-04-03T17:11:17.244Z","__v":0}]};
   // const row = game.players.map((player) => {return {...player, teamName: game.teams?.find((team) => team.id === player.teamID)?.name || ''}});
   
     const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
-    const gridStyle = useMemo(() => ({ height: '500px', width: '100%' }), []);
+    const gridStyle = useMemo(() => ({ height: '400px', width: '100%' }), []);
     const [rowData, setRowData] = useState(gameSetting.players);
     const [columnDefs, setColumnDefs] = useState([
       { field: 'name', rowDrag: true },
@@ -404,8 +309,14 @@ const Admin = () => {
             return tileContainer;
           },
           onDragStop: (params) => {
-            // setTeamPlayers(oldArray => [...oldArray, {teamID: team.id, render: <div className='tile'>{params.node.data.name}</div>}])
-            setTeamPlayers(oldArray => [...oldArray, {teamID: team.id, render: <PlayerItem player={{name: params.node.data.name, id: params.node.data.id, lives: params.node.data.lives}} />}])
+            setTeamPlayers(oldArray => {
+              const exist = oldArray.find( (teamPlayer) => teamPlayer.player.id == params.node.data.id && teamPlayer.teamID == team.id );
+              if(!exist){
+                return [...oldArray, {teamID: team.id, player: {name: params.node.data.name, id: params.node.data.id, lives: params.node.data.lives}}]
+              }else{
+                return [...oldArray]
+              }
+            })
           },
         };
         params.api.addRowDropZone(dropZone);
@@ -422,35 +333,6 @@ const Admin = () => {
         <br />
 
       </div>    
-      <div className="drop-containers">
-          <div className="grid-wrapper">
-            <div style={gridStyle} className="ag-theme-alpine">
-              <AgGridReact
-                rowData={rowData}
-                columnDefs={columnDefs}
-                defaultColDef={defaultColDef}
-                rowDragManaged={true}
-                animateRows={true}
-                onGridReady={onGridReady}
-              ></AgGridReact>
-            </div>
-          </div>
-          <div className='drop-wrapper'>
-          {gameSetting.teams.map((team) => (
-            <div className="drop-col">
-              <span id="eDropTarget" className="drop-target">
-                Equipe: {team.name}
-              </span>
-              <div className={`team-${team.id}`}>
-              {teamPlayers.map( (teamPlayer) => {
-                return teamPlayer.teamID == team.id && teamPlayer.render;
-              } )}
-              </div>
-            </div>
-          ))}
-          </div>
-
-        </div>
 
       <form onSubmit={ handleTeamSubmit }>
         <TextField
@@ -465,7 +347,7 @@ const Admin = () => {
           Ajouter une équipe
         </Button>
       </form>
-      { teams.map( ( team ) => (
+      {/* { teams.map( ( team ) => (
         <div key={ team.id }>
           <h2>
             { editingTeam === team.id ? (
@@ -500,7 +382,7 @@ const Admin = () => {
           <Button onClick={ () => handleRemoveTeam( team.id ) }>Remove</Button>
           <span>{ team.key }</span>
         </div>
-      ) ) }
+      ) ) } */}
 
       <form onSubmit={ handleSubmit }>
         <br />
@@ -509,6 +391,26 @@ const Admin = () => {
 
         <Button type="submit" variant="outlined">Ajouter un joueur</Button>
       </form>
+
+      <div className="drop-containers">
+        <div className="grid-wrapper">
+          <div style={gridStyle} className="ag-theme-alpine">
+            <AgGridReact
+              rowData={rowData}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              rowDragManaged={true}
+              animateRows={true}
+              onGridReady={onGridReady}
+            ></AgGridReact>
+          </div>
+        </div>
+        <div className='drop-wrapper'>
+        {gameSetting.teams.map((team) => (
+          <Team id={team.id} teamPlayers={teamPlayers} />
+        ))}
+        </div>
+      </div>
 
       <label>
         <br />
