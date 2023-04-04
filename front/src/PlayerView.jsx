@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback} from 'react';
+import React, { useEffect, useState } from 'react';
 import * as API from './api';
 import socket from './socket';
 import { Button, Box, IconButton, TextField, Slider, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, Select, MenuItem, useTheme } from '@mui/material';
@@ -7,14 +7,8 @@ import style from "./styles.module.scss";
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Settings from './Settings';
 import Player from './PlayerView';
-import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
-import 'ag-grid-enterprise';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
-import './style.css';
 
 const Admin = () => {
-  const [ game, setGame ] = useState();
   const [ teamName, setTeamName ] = useState( '' );
   const [ teams, setTeams ] = useState( [] );
   const [ editingTeam, setEditingTeam ] = useState( '' );
@@ -28,12 +22,6 @@ const Admin = () => {
   const [ maximumLives, setMaximumLives ] = useState( 0 );
   const [ searchQuery, setSearchQuery ] = useState( "" );
   const theme = useTheme();
-
-  const fetchGaming = async () => {
-    const game = await API.getGame();
-    console.log( 'REACT/ fetching gaming',game)
-    setGame( game );
-  };
 
   const fetchGame = async () => {
     console.log( 'REACT/ fetching game' )
@@ -92,28 +80,7 @@ const Admin = () => {
   const PlayerItem = ( { player } ) => {
     return (
       <li className={ style.list } key={ player.id }>
-        <div className={ style.userActions }>
-          <IconButton
-            color="secondary"
-            aria-label="edit"
-            onClick={ () => {
-              setEditingPlayer( player.id );
-              setEditingName( player.name );
-            } }
-          >
-            <EditIcon />
-          </IconButton>
 
-          <IconButton onClick={ () => handleRemovePlayer( player.id ) } color="secondary" aria-label="add an alarm">
-            <DeleteForeverIcon />
-          </IconButton>
-          <IconButton onClick={ () => handleRemoveLife( player.id ) } color="secondary" aria-label="add an alarm">
-            <RemoveIcon />
-          </IconButton>
-          <IconButton onClick={ () => handleAddLife( player.id ) } color="secondary" aria-label="add an alarm">
-            <AddIcon />
-          </IconButton>
-        </div>
         <span>
           { Array( player.lives )
             .fill()
@@ -187,7 +154,7 @@ const Admin = () => {
   }
 
   useEffect( () => {
-    fetchGaming();
+
     fetchGameSettings();
     fetchTeams();
     fetchPlayers();
@@ -360,155 +327,11 @@ const Admin = () => {
     socket.emit( "clientLivesUpdate", updatedPlayer );
   };
 
-  /****************AG-GRID****************************************************************************/
-  const gameSetting = {"players":[{"_id":"642b0885321b61d5db5de379","name":"Lucie","id":"c48f8645-4302-4308-8dfe-60f4e4c9561d","teamID":"8b030b29-cba5-4946-b7ca-1272d9b0fd51","lives":3,"__v":0},{"_id":"642b088c321b61d5db5de37d","name":"Va","id":"ff10c867-c21a-4fef-bcdf-0e2cb3c0c1a3","teamID":"d61baa6a-1950-471d-8468-975e11bfd7b1","lives":3,"__v":0},{"_id":"642b088c321b61d5db5de67p","name":"Charlotte","id":"ff10c867-c21a-4fef-bcdf-0e2cb3c0c1a3","teamID":"d61baa6a-1950-471d-8468-975e11bfd7b1","lives":3,"__v":0}],"settings":{"_id":"642b0827321b61d5db5de34a","maximumLives":3,"__v":0},"teams":[{"_id":"642b08b1321b61d5db5de3a1","name":"AAAA","id":"d61baa6a-1950-471d-8468-975e11bfd7b1","createdAt":"2023-04-03T17:11:13.742Z","__v":0},{"_id":"642b08b5321b61d5db5de3a6","name":"222é","id":"8b030b29-cba5-4946-b7ca-1272d9b0fd51","createdAt":"2023-04-03T17:11:17.244Z","__v":0}]};
-  // const row = game.players.map((player) => {return {...player, teamName: game.teams?.find((team) => team.id === player.teamID)?.name || ''}});
-  
-    const containerStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
-    const gridStyle = useMemo(() => ({ height: '500px', width: '100%' }), []);
-    const [rowData, setRowData] = useState(gameSetting.players);
-    const [columnDefs, setColumnDefs] = useState([
-      { field: 'name', rowDrag: true },
-      { field: 'id', hide: true },
-      { field: 'lives' },
-
-    ]);
-    const defaultColDef = useMemo(() => {
-      return {
-        sortable: true,
-        filter: true,
-        resizable: true,
-        flex: 1,
-      };
-    }, []);
-  
-    const onGridReady = useCallback((params) => {
-      addDropZones(params);
-      addCheckboxListener(params);
-    }, []);
-
-    const addCheckboxListener = (params) => {
-      var checkbox = document.querySelector('input[type=checkbox]');
-      checkbox.addEventListener('change', function () {
-        params.api.setSuppressMoveWhenRowDragging(checkbox.checked);
-      });
-    };
-
-    const [teamPlayers, setTeamPlayers] = useState([]);
-    
-    const addDropZones = (params) => {
-      gameSetting.teams.forEach((team) => {
-        var tileContainer = document.querySelector(`.team-${team.id}`);
-        var dropZone = {
-          getContainer: () => {
-            return tileContainer;
-          },
-          onDragStop: (params) => {
-            // setTeamPlayers(oldArray => [...oldArray, {teamID: team.id, render: <div className='tile'>{params.node.data.name}</div>}])
-            setTeamPlayers(oldArray => [...oldArray, {teamID: team.id, render: <PlayerItem player={{name: params.node.data.name, id: params.node.data.id, lives: params.node.data.lives}} />}])
-          },
-        };
-        params.api.addRowDropZone(dropZone);
-      })
-    };
-   /*****************************************************************************************************/
-
   return (
     <div>
       <img src="logo.png" className={ style.logo } /> { selectedTeam }
       <div>
-        <Settings />
-
-        <br />
-
-      </div>    
-      <div className="drop-containers">
-          <div className="grid-wrapper">
-            <div style={gridStyle} className="ag-theme-alpine">
-              <AgGridReact
-                rowData={rowData}
-                columnDefs={columnDefs}
-                defaultColDef={defaultColDef}
-                rowDragManaged={true}
-                animateRows={true}
-                onGridReady={onGridReady}
-              ></AgGridReact>
-            </div>
-          </div>
-          <div className='drop-wrapper'>
-          {gameSetting.teams.map((team) => (
-            <div className="drop-col">
-              <span id="eDropTarget" className="drop-target">
-                Equipe: {team.name}
-              </span>
-              <div className={`team-${team.id}`}>
-              {teamPlayers.map( (teamPlayer) => {
-                return teamPlayer.teamID == team.id && teamPlayer.render;
-              } )}
-              </div>
-            </div>
-          ))}
-          </div>
-
-        </div>
-
-      <form onSubmit={ handleTeamSubmit }>
-        <TextField
-          size="small"
-          value={ teamName }
-          onChange={ ( e ) => setTeamName( e.target.value ) }
-          id="outlined-basic"
-          label="Nom de l'équipe"
-          variant="outlined"
-        />
-        <Button type="submit" variant="outlined">
-          Ajouter une équipe
-        </Button>
-      </form>
-      { teams.map( ( team ) => (
-        <div key={ team.id }>
-          <h2>
-            { editingTeam === team.id ? (
-              <form onSubmit={ ( e ) => handleEditTeam( team.id, e ) }>
-                <TextField
-                  value={ editingTeamName }
-                  onChange={ ( e ) => setEditingTeamName( e.target.value ) }
-                  size="small"
-                  autoFocus
-                />
-                <Button type="submit" variant="outlined">
-                  Modifier
-                </Button>
-                <Button
-                  onClick={ () => {
-                    setEditingTeam( '' );
-                    setEditingTeamName( "" );
-                  } }
-                >
-                  Annuler
-                </Button>
-              </form>
-            ) : (
-              <>
-                { team.name }{ " " }
-                <IconButton onClick={ () => setEditingTeam( team.id ) }>
-                  <EditIcon />
-                </IconButton>
-              </>
-            ) }
-          </h2>
-          <Button onClick={ () => handleRemoveTeam( team.id ) }>Remove</Button>
-          <span>{ team.key }</span>
-        </div>
-      ) ) }
-
-      <form onSubmit={ handleSubmit }>
-        <br />
-
-        <TextField size="small" value={ name } onChange={ ( e ) => setName( e.target.value ) } id="outlined-basic" label="Prénom" variant="outlined" />
-
-        <Button type="submit" variant="outlined">Ajouter un joueur</Button>
-      </form>
+      </div>
 
       <label>
         <br />
