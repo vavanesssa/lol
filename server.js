@@ -71,7 +71,7 @@ io.on( 'connection', ( socket ) => {
 
 // API
 
-app.get( '/api/game', async ( req, res ) => {
+app.get( '/api/getgame', async ( req, res ) => {
   try {
     const players = await Player.find();
     const settings = await GameSettings.findOne();
