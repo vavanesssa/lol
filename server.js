@@ -98,8 +98,8 @@ app.get( '/api/getplayers', async ( req, res ) => {
   }
 } );
 
-app.get( '/api/getplayers/:playerid', async ( req, res ) => {
-  logger( `GET /getplayers/${req.params.playerid}` );
+app.get( '/api/getplayer/:playerid', async ( req, res ) => {
+  logger( `GET /getplayer/${req.params.playerid}` );
   try {
     const player = await Player.findOne( {
       id: req.params.playerid,
@@ -127,13 +127,14 @@ app.post( '/api/addplayer', async ( req, res ) => {
 } );
 
 app.post( '/api/editplayer', async ( req, res ) => {
-  const { id, name, teamID } = req.body;
+  const { player, teamID } = req.body;
   try {
+    const id = player.id;
     // Find the player's current team
-    const player = await Player.findOne( { id } );
+    const foundPlayer = await Player.findOne( { id } );
 
     // Remove player from previous team
-    const prevTeam = await Team.findOne( { id: player.teamID } );
+    const prevTeam = await Team.findOne( { id: foundPlayer.teamID } );
     if ( prevTeam ) {
       prevTeam.playersInTeam = prevTeam.playersInTeam.filter( ( playerId ) => playerId !== id );
       await prevTeam.save();
@@ -142,7 +143,7 @@ app.post( '/api/editplayer', async ( req, res ) => {
     // Update player's teamID
     const updatedPlayer = await Player.findOneAndUpdate(
       { id },
-      { name, teamID },
+      { name: player.name, teamID: player.teamID, lives: player.lives },
       { new: true }
     );
 
@@ -150,7 +151,7 @@ app.post( '/api/editplayer', async ( req, res ) => {
     if ( teamID ) {
       const newTeam = await Team.findOne( { id: teamID } );
       if ( newTeam ) {
-        newTeam.playersInTeam.addToSet( player.id );
+        newTeam.playersInTeam.addToSet( foundPlayer.id );
         await newTeam.save();
       }
     }
@@ -158,7 +159,7 @@ app.post( '/api/editplayer', async ( req, res ) => {
     io.emit( 'playerUpdated', updatedPlayer );
 
     res.json( updatedPlayer );
-    logger( `POST /editplayer - Updated player: ${name} ` );
+    logger( `POST /editplayer - Updated player: ${JSON.stringify(updatedPlayer, null, 4)} ` );
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -354,17 +355,18 @@ app.get( '/api/getteam/:teamid', async ( req, res ) => {
 } );
 
 app.post( '/api/editteam', async ( req, res ) => {
-  const { id, name } = req.body;
+  const { team } = req.body;
 
   try {
-    const team = await Team.findOneAndUpdate(
+    const id = team.id;
+    const teamUpdated = await Team.findOneAndUpdate(
       { id },
-      { name },
+      { name: team.name, playersInTeam: team.playersInTeam },
       { new: true }
     );
-    io.emit( 'teamUpdated', team );
-    res.json( team );
-    logger( `POST /editteam - Updated team: ${name}` );
+    io.emit( 'teamUpdated', teamUpdated );
+    res.json( teamUpdated );
+    logger( `POST /editteam - Updated team: ${JSON.stringify(teamUpdated, null, 4)}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );

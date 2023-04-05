@@ -35,7 +35,7 @@ export const Player = React.memo(
         };
 
         const handlePlayerUpdated = (data) => {
-            const playerFromSocket = JSON.parse(data);
+            const playerFromSocket = data;
             // if (playerFromSocket !== player) {
             if (playerFromSocket.id == id && !deepEqual(playerFromSocket, player)) {
                 // setLoading(true);
@@ -45,7 +45,7 @@ export const Player = React.memo(
         };
 
         const handleLivesUpdated = (data) => {
-            const players = JSON.parse(data);
+            const players = data;
             const playerToUpdate = players.find((p) => p.id == id);
             if (playerToUpdate && !deepEqual(playerToUpdate, player)) {
                 setPlayer({ ...player, lives: playerToUpdate.lives });

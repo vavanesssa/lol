@@ -26,7 +26,7 @@ export const Team = React.memo(
         };
 
         const handleTeamUpdated = (data) => {
-            const teamFromSocket = JSON.parse(data);
+            const teamFromSocket = data;
             // if (teamFromSocket !== team) {
             if (teamFromSocket.id == id && !deepEqual(teamFromSocket, team)) {
                 // setLoading(true);
@@ -159,8 +159,8 @@ export const Team = React.memo(
                             </IconButton>
                         </div>
                         <div className={`team-${id}`}>
-                            {team?.playersInTeam && !!team.playersInTeam.length && team.playersInTeam.map((player) => {
-                                return <Player id={player.id} />;
+                            {team?.playersInTeam && !!team.playersInTeam.length && team.playersInTeam.map((id) => {
+                                return <Player id={id} />;
                             })}
                         </div>
                     </React.Fragment>

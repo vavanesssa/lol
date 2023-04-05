@@ -131,14 +131,14 @@ export async function removeLife ( playerId ) {
   return removedLife;
 }
 
-export async function editPlayer ( playerId, newName, newTeamID ) {
-  console.log( "API /editPlayer", playerId, newName, newTeamID );
+export async function editPlayer ( player ) {
+  console.log( "API /editPlayer", player );
   const response = await fetch( `${API_URL}/editplayer`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify( { id: playerId, name: newName, teamID: newTeamID } ),
+    body: JSON.stringify( { player: player } ),
   } );
 
   const updatedPlayer = await response.json();
@@ -179,14 +179,14 @@ export async function getTeam (id) {
   return team;
 }
 
-export async function editTeam ( id, newName ) {
-  console.log( "API /editTeam", id, newName );
+export async function editTeam ( team ) {
+  console.log( "API /editTeam", team );
   const response = await fetch( `${API_URL}/editteam`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify( { id: id, name: newName } ),
+    body: JSON.stringify( { team: team } ),
   } );
 
   const updatedTeam = await response.json();

@@ -22,6 +22,7 @@ const Admin = () => {
   const [newTeamName, setNewTeamName] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('');
+  const [loading, setLoading] = useState(false);
   // const [searchQuery, setSearchQuery] = useState("");
   // const theme = useTheme();
 
@@ -30,6 +31,7 @@ const Admin = () => {
     if (gaming && !deepEqual(gaming, game)) {
       console.log('REACT/ fetching gaming', gaming)
       setGame(gaming);
+      // setLoading(false);
     }
   };
 
@@ -102,13 +104,22 @@ const Admin = () => {
     };
   }, []);
 
+  // useEffect(() => {
+  //   if (!loading) {
+  //       // setLoading(true);
+  //       getGame();
+  //   }
+  // }, [loading]);
+
   const handleAddPlayerSubmit = async (e) => {
     console.log("REACT/handleAddPlayerSubmit", { newPlayerName });
     e.preventDefault();
+    setLoading(true);
     const newPlayer = await API.addPlayer(newPlayerName, game.settings.maximumLives);
     if (newPlayer) {
       setNewPlayerName('');
       socket.emit('playerAdded', newPlayer);
+      setLoading(false);
       console.log("REACT/handleAddPlayerSubmit complete");
     }
   };
@@ -116,17 +127,19 @@ const Admin = () => {
   const handleAddTeamSubmit = async (e) => {
     console.log("REACT/handleTeamSubmit", { newTeamName });
     e.preventDefault();
+    setLoading(true);
     const newTeam = await API.addTeam(newTeamName);
     if (newTeam) {
       setNewTeamName('');
       socket.emit('teamAdded', newTeam);
+      setLoading(false);
       console.log("REACT/handleTeamSubmit complete");
     }
   };
 
-  const handleAddPlayerTeam = async (team, playerId) => {
+  const handleAddPlayerTeam = async (team, playerID) => {
     console.log("REACT/handleAddPlayerTeam", { newTeamName });
-    const updatedTeam = await API.editTeam({ ...team, players: [...team.players, playerID] });
+    const updatedTeam = await API.editTeam({ ...team, playersInTeam: [...team.playersInTeam, playerID] });
     if (updatedTeam) {
       socket.emit('teamUpdated', updatedTeam);
     }
@@ -143,7 +156,6 @@ const Admin = () => {
     { field: 'name', rowDrag: true },
     { field: 'id', hide: true },
     { field: 'lives' },
-
   ]);
   const defaultColDef = useMemo(() => {
     return {
@@ -154,10 +166,22 @@ const Admin = () => {
     };
   }, []);
 
-  const onGridReady = useCallback((params) => {
-    addDropZones(params);
+  useEffect(() => {
+    if (game && game?.players) {
+      setRowData(game.players);
+      setColumnDefs([
+        { field: 'name', rowDrag: true },
+        { field: 'id', hide: true },
+        { field: 'lives' },
+      ])
+    }
+  }, [game]);
+
+  const onGridReady = (params) => {
+    // console.log("game onGridReady ",game)
+    addDropZones(params.api);
     addCheckboxListener(params);
-  }, []);
+  };
 
   const addCheckboxListener = (params) => {
     var checkbox = document.querySelector('input[type=checkbox]');
@@ -166,7 +190,7 @@ const Admin = () => {
     });
   };
 
-  const addDropZones = (params) => {
+  const addDropZones = (api) => {
     game && game?.teams && !!game.teams.length && game.teams.forEach((team) => {
       var tileContainer = document.querySelector(`.team-${team.id}`);
       var dropZone = {
@@ -175,22 +199,16 @@ const Admin = () => {
         },
         onDragStop: (params) => {
           console.log("onDragStop ",team,params?.node?.data?.id)
-          const exist = team.players.find((player) => player.id == params.node.data.id);
+          const exist = team.playersInTeam.find((player) => player.id == params.node.data.id);
           if (!exist) {
             handleAddPlayerTeam(team, params.node.data.id);
           }
         },
       };
-      params.api.addRowDropZone(dropZone);
+      api.addRowDropZone(dropZone);
     })
   };
   /*****************************************************************************************************/
-
-  useEffect(() => {
-    if (game && game?.players) {
-      setRowData(game.players)
-    }
-  }, [game]);
 
   return (
     <div>
@@ -239,6 +257,10 @@ const Admin = () => {
               rowDragManaged={true}
               animateRows={true}
               onGridReady={onGridReady}
+              onRowDataUpdated={(event) => {
+                console.log("onRowDataChanged ",event)
+                addDropZones(event.api);
+              }}
             ></AgGridReact>
           </div>
         </div>
