@@ -340,8 +340,8 @@ app.get( '/api/getteams', async ( req, res ) => {
   }
 } );
 
-app.get( '/api/getteams/:teamid', async ( req, res ) => {
-  logger( `GET /getteams/${req.params.teamid}` );
+app.get( '/api/getteam/:teamid', async ( req, res ) => {
+  logger( `GET /getteam/${req.params.teamid}` );
   try {
     const team = await Team.findOne( {
       id: req.params.teamid,
