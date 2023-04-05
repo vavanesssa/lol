@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, IconButton, TextField } from '@mui/material';
+import { Button, IconButton, TextField, Alert } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, Edit as EditIcon, DeleteForever as DeleteForeverIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import * as API from './api';
 import socket from './socket';
@@ -12,6 +12,7 @@ export const Player = React.memo(
         const [loading, setLoading] = useState(false);
         const [editing, setEditing] = useState(false);
         const [editingName, setEditingName] = useState("");
+        const [message, setMessage] = useState("");
 
         const getPlayer = async () => {
             const player = await API.getPlayer(id);
@@ -120,17 +121,18 @@ export const Player = React.memo(
                         onClick={() => {
                             setEditing(true);
                         }}
+                        disabled={loading}
                     >
                         <EditIcon />
                     </IconButton>
 
-                    <IconButton onClick={() => handleRemovePlayer()} color="secondary" aria-label="add an alarm">
+                    <IconButton onClick={() => handleRemovePlayer()} disabled={loading} color="secondary" aria-label="add an alarm">
                         <DeleteForeverIcon />
                     </IconButton>
-                    <IconButton onClick={() => handleRemoveLife()} color="secondary" aria-label="add an alarm">
+                    <IconButton onClick={() => handleRemoveLife()} disabled={loading} color="secondary" aria-label="add an alarm">
                         <RemoveIcon />
                     </IconButton>
-                    <IconButton onClick={() => handleAddLife()} color="secondary" aria-label="add an alarm">
+                    <IconButton onClick={() => handleAddLife()} disabled={loading} color="secondary" aria-label="add an alarm">
                         <AddIcon />
                     </IconButton>
                 </div>
@@ -182,7 +184,7 @@ export const Player = React.memo(
                                         </Select>
                                     </FormControl> */}
 
-                                    <Button type="submit" variant="outlined">
+                                    <Button type="submit" disabled={loading} variant="outlined">
                                         Modifier
                                     </Button>
                                     <Button
@@ -201,6 +203,7 @@ export const Player = React.memo(
 
                             )}
                         </span>
+                        {!!message && (<Alert severity="warning">{message}</Alert>)}
 
                     </span>
                 )}

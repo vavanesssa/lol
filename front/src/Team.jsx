@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IconButton, Button, TextField } from '@mui/material';
+import { IconButton, Button, TextField, Alert } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, Edit as EditIcon, DeleteForever as DeleteForeverIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import * as API from './api';
 import socket from './socket';
@@ -12,6 +12,7 @@ export const Team = React.memo(
         const [loading, setLoading] = useState(false);
         const [editing, setEditing] = useState(false);
         const [editingName, setEditingName] = useState("");
+        const [message, setMessage] = useState("");
 
         const getTeam = async () => {
             const team = await API.getTeam(id);
@@ -22,17 +23,18 @@ export const Team = React.memo(
         const handleTeamUpdated = (data) => {
             const teamFromSocket = JSON.parse(data);
             // if (teamFromSocket !== team) {
-                if(teamFromSocket.id == id){
-                    getTeam();
-                }
+            if (teamFromSocket.id == id) {
+                getTeam();
+            }
             // 
         };
 
         useEffect(() => {
+            console.log("team ", id)
             getTeam();
             socket.on("teamUpdated", handleTeamUpdated);
             return () => {
-                socket.off( 'teamUpdated', handleTeamUpdated);
+                socket.off('teamUpdated', handleTeamUpdated);
             };
         }, []);
 
@@ -47,21 +49,56 @@ export const Team = React.memo(
             const response = await API.removeTeam(id);
             if (response.success) {
                 setLoading(false);
-                socket.emit( 'teamRemoved', id );
+                socket.emit('teamRemoved', id);
                 console.log("REACT/handleRemoveTeam complete");
             }
+        };
+
+        const handleRemoveOneLifeTeamPlayer = async () => {
+            // console.log("REACT/handleRemoveOneLifeTeamPlayer", { id });
+            // setLoading(true);
+            // const player = players.find((p) => p.id === id);
+
+            // if (player && player.lives <= 0) {
+            //     console.log("min reached");
+            //     return;
+            // }
+
+            // const updatedPlayer = await API.removeLife(id);
+            // if (updatedPlayer.success) {
+            //     setLoading(false);
+            //     socket.emit("clientLivesUpdate", updatedPlayer);
+            //     console.log("REACT/handleRemoveOneLifeTeamPlayer complete");
+            // }
+        };
+
+        const handleAddOneLifeTeamPlayer = async () => {
+            // console.log("REACT/handleAddOneLifeTeamPlayer", { id });
+            // setLoading(true);
+            // const player = players.find((p) => p.id === id);
+
+            // if (player && player.lives >= maximumLives) {
+            //     console.log("max reached");
+            //     return;
+            // }
+
+            // const updatedPlayer = await API.addLife(id);
+            // if (updatedPlayer.success) {
+            //     setLoading(false);
+            //     socket.emit("clientLivesUpdate", updatedPlayer);
+            // }
         };
 
         const handleEditSubmit = async (e) => {
             e.preventDefault();
             if (!editingName) return;
             setLoading(true);
-            const updatedTeam = await API.editTeam({...team, name: editingName});
+            const updatedTeam = await API.editTeam({ ...team, name: editingName });
             if (updatedTeam.success) {
                 setEditingName(editingName);
                 setEditing(false);
                 setLoading(false);
-                socket.emit( 'teamUpdated', updatedTeam );
+                socket.emit('teamUpdated', updatedTeam);
             }
         };
 
@@ -80,7 +117,7 @@ export const Team = React.memo(
                                         autoFocus
                                     />
 
-                                    <Button type="submit" variant="outlined">
+                                    <Button type="submit" disabled={loading} variant="outlined">
                                         Modifier
                                     </Button>
                                     <Button
@@ -102,11 +139,18 @@ export const Team = React.memo(
                                 onClick={() => {
                                     setEditing(true);
                                 }}
+                                disabled={loading}
                             >
                                 <EditIcon />
                             </IconButton>
-                            <IconButton onClick={() => handleRemoveTeam()} color="secondary" aria-label="add an alarm">
+                            <IconButton onClick={() => handleRemoveTeam()} disabled={loading} color="secondary" aria-label="add an alarm">
                                 <DeleteForeverIcon />
+                            </IconButton>
+                            <IconButton onClick={() => handleRemoveOneLifeTeamPlayer()} disabled={loading} color="secondary" aria-label="add an alarm">
+                                <RemoveIcon />
+                            </IconButton>
+                            <IconButton onClick={() => handleAddOneLifeTeamPlayer()} disabled={loading} color="secondary" aria-label="add an alarm">
+                                <AddIcon />
                             </IconButton>
                         </div>
                         <div className={`team-${id}`}>
@@ -116,6 +160,7 @@ export const Team = React.memo(
                         </div>
                     </React.Fragment>
                 )}
+                {!!message && (<Alert severity="warning">{message}</Alert>)}
             </div>
         )
     }
