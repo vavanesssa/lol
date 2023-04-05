@@ -4,6 +4,7 @@ import { Add as AddIcon, Remove as RemoveIcon, Edit as EditIcon, DeleteForever a
 import * as API from './api';
 import socket from './socket';
 import { Player } from './Player';
+import { deepEqual } from './utils';
 
 export const Team = React.memo(
     ({ id }) => {
@@ -23,7 +24,7 @@ export const Team = React.memo(
         const handleTeamUpdated = (data) => {
             const teamFromSocket = JSON.parse(data);
             // if (teamFromSocket !== team) {
-            if (teamFromSocket.id == id) {
+            if (teamFromSocket.id == id && !deepEqual(teamFromSocket,team)) {
                 getTeam();
             }
             // 

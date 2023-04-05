@@ -4,11 +4,13 @@ import { Add as AddIcon, Remove as RemoveIcon, Edit as EditIcon, DeleteForever a
 import * as API from './api';
 import socket from './socket';
 import style from "./styles.module.scss";
+import { deepEqual } from './utils';
 
 export const Player = React.memo(
     ({ id }) => {
         //player: { id: string, teamID: string, name: string, lives: number, maximumLive: number }
         const [player, setPlayer] = useState();
+        const [settings, setSettings] = useState();
         const [loading, setLoading] = useState(false);
         const [editing, setEditing] = useState(false);
         const [editingName, setEditingName] = useState("");
@@ -20,30 +22,37 @@ export const Player = React.memo(
             setPlayer(player);
         };
 
+        const getSettings = async () => {
+            const gameSettings = await API.fetchGameSettings();
+            console.log('REACT/ fetching settings', gameSettings)
+            setSettings(gameSettings);
+        };
+
         const handlePlayerUpdated = (data) => {
             const playerFromSocket = JSON.parse(data);
             // if (playerFromSocket !== player) {
-                if(playerFromSocket.id == id){
-                    getPlayer();
-                }
+            if (playerFromSocket.id == id && !deepEqual(playerFromSocket, player)) {
+                getPlayer();
+            }
             // }
         };
 
         const handleLivesUpdated = (data) => {
             const players = JSON.parse(data);
             const playerToUpdate = players.find((p) => p.id == id);
-            if(playerToUpdate){
-                setPlayer({...player, lives: playerToUpdate.lives});
+            if (playerToUpdate && !deepEqual(playerToUpdate, player)) {
+                setPlayer({ ...player, lives: playerToUpdate.lives });
             }
         };
 
         useEffect(() => {
             getPlayer();
+            getSettings();
             socket.on("playerUpdated", handlePlayerUpdated);
-            socket.on( 'livesUpdated', handleLivesUpdated);
+            socket.on('livesUpdated', handleLivesUpdated);
             return () => {
                 socket.off('playerUpdated', handlePlayerUpdated);
-                socket.off( 'livesUpdated', handleLivesUpdated);
+                socket.off('livesUpdated', handleLivesUpdated);
             };
         }, []);
 
@@ -67,12 +76,12 @@ export const Player = React.memo(
         const handleRemoveLife = async () => {
             console.log("REACT/handleRemoveLife", { id });
             setLoading(true);
-            const player = players.find((p) => p.id === id);
+            // const player = players.find((p) => p.id === id);
 
-            if (player && player.lives <= 0) {
-                console.log("min reached");
-                return;
-            }
+            // if (player && player.lives <= 0) {
+            //     console.log("min reached");
+            //     return;
+            // }
 
             const updatedPlayer = await API.removeLife(id);
             if (updatedPlayer.success) {
@@ -85,12 +94,12 @@ export const Player = React.memo(
         const handleAddLife = async () => {
             console.log("REACT/handleAddLife", { id });
             setLoading(true);
-            const player = players.find((p) => p.id === id);
+            // const player = players.find((p) => p.id === id);
 
-            if (player && player.lives >= maximumLives) {
-                console.log("max reached");
-                return;
-            }
+            // if (player && player.lives >= settings.maximumLives) {
+            //     console.log("max reached");
+            //     return;
+            // }
 
             const updatedPlayer = await API.addLife(id);
             if (updatedPlayer.success) {
@@ -103,12 +112,12 @@ export const Player = React.memo(
             e.preventDefault();
             if (!editingName) return;
             setLoading(true);
-            const updatedPlayer = await API.editPlayer({...player, name: editingName});
+            const updatedPlayer = await API.editPlayer({ ...player, name: editingName });
             if (updatedPlayer.success) {
                 setEditingName(editingName);
                 setEditing(false);
                 setLoading(false);
-                socket.emit( 'playerUpdated', updatedPlayer );
+                socket.emit('playerUpdated', updatedPlayer);
             }
         };
 
@@ -143,15 +152,17 @@ export const Player = React.memo(
                             .map((_, index) => (
                                 <img src="laugh.png" alt="emoji" className={style.emoji} key={index} />
                             ))}
-                        <span style={{ opacity: 0.3 }}>
-                            {maximumLives - player.lives > 0
-                                ? Array(maximumLives - player.lives)
-                                    .fill()
-                                    .map((_, index) => (
-                                        <img src="laugh.png" alt="emoji" className={style.emoji} key={index} />
-                                    ))
-                                : ""}
-                        </span>
+                        {!!settings && settings?.maximumLives && (
+                            <span style={{ opacity: 0.3 }}>
+                                {settings.maximumLives - player.lives > 0
+                                    ? Array(settings.maximumLives - player.lives)
+                                        .fill()
+                                        .map((_, index) => (
+                                            <img src="laugh.png" alt="emoji" className={style.emoji} key={index} />
+                                        ))
+                                    : ""}
+                            </span>
+                        )}
 
                         <span className={player.lives == 0 ? style.dead : style.username}>
                             {editing ? (
@@ -197,7 +208,7 @@ export const Player = React.memo(
                                 </form>
                             ) : (
                                 <div>
-                                    {player.name} 
+                                    {player.name}
                                     {/* {player?.teamID && teams.find((team) => team.id === player?.teamID)?.name} */}
                                 </div>
 
