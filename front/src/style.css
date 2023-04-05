@@ -43,9 +43,12 @@
   }
   
   .drop-target {
+    display: flex;
+    flex-direction: row;
     border: 1px solid rgba(0,0,0,0.87);
     background-color: #5050505e;;
-    padding: 10px;
+    padding: 8px;
+    gap: 12px;
   }
   
   div[class^="team"] {

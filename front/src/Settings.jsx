@@ -22,7 +22,9 @@ const Settings = () => {
   const fetchGameSettingsData = async () => {
     console.log( 'REACT/ fetching game settings' );
     const settings = await fetchGameSettings();
-    setMaximumLives( settings.maximumLives );
+    if(settings.success){
+      setMaximumLives( settings.maximumLives );
+    }
   };
 
   const updateGameSettingsData = async () => {
@@ -31,7 +33,6 @@ const Settings = () => {
 
   const resetLivesData = async () => {
     const updatedPlayers = await resetLives( maximumLives );
-
     handleClose()
   };
 

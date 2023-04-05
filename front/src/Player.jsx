@@ -18,16 +18,31 @@ export const Player = React.memo(
             setPlayer(player);
         };
 
-        useEffect(() => {
-            getPlayer();
-            socket.on("updated player", (data) => {
-                const playerFromSocket = JSON.parse(data);
-                if (playerFromSocket !== player) {
+        const handlePlayerUpdated = (data) => {
+            const playerFromSocket = JSON.parse(data);
+            // if (playerFromSocket !== player) {
+                if(playerFromSocket.id == id){
                     getPlayer();
                 }
-            });
+            // }
+        };
+
+        const handleLivesUpdated = (data) => {
+            const playerFromSocket = JSON.parse(data);
+            // if (playerFromSocket !== player) {
+                if(playerFromSocket.id == id){
+                    getPlayer();
+                }
+            // }
+        };
+
+        useEffect(() => {
+            getPlayer();
+            socket.on("playerUpdated", handlePlayerUpdated);
+            socket.on( 'livesUpdated', handleLivesUpdated);
             return () => {
-                socket.off('updated player');
+                socket.off('playerUpdated', handlePlayerUpdated);
+                socket.off( 'livesUpdated', handleLivesUpdated);
             };
         }, []);
 
@@ -43,7 +58,7 @@ export const Player = React.memo(
             const removedid = await API.removePlayer(id);
             if (removedid.success) {
                 setLoading(false);
-                socket.emit('clientPlayerRemoved', removedid);
+                socket.emit('clientPlayerRemoved', id);
                 console.log("REACT/handleRemovePlayer complete");
             }
         };
@@ -92,6 +107,7 @@ export const Player = React.memo(
                 setEditingName(editingName);
                 setEditing(false);
                 setLoading(false);
+                socket.emit( 'playerUpdated', updatedPlayer );
             }
         };
 
@@ -108,13 +124,13 @@ export const Player = React.memo(
                         <EditIcon />
                     </IconButton>
 
-                    <IconButton onClick={() => handleRemovePlayer(id)} color="secondary" aria-label="add an alarm">
+                    <IconButton onClick={() => handleRemovePlayer()} color="secondary" aria-label="add an alarm">
                         <DeleteForeverIcon />
                     </IconButton>
-                    <IconButton onClick={() => handleRemoveLife(id)} color="secondary" aria-label="add an alarm">
+                    <IconButton onClick={() => handleRemoveLife()} color="secondary" aria-label="add an alarm">
                         <RemoveIcon />
                     </IconButton>
-                    <IconButton onClick={() => handleAddLife(id)} color="secondary" aria-label="add an alarm">
+                    <IconButton onClick={() => handleAddLife()} color="secondary" aria-label="add an alarm">
                         <AddIcon />
                     </IconButton>
                 </div>
