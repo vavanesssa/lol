@@ -127,22 +127,37 @@ app.post( '/api/addplayer', async ( req, res ) => {
 } );
 
 app.post( '/api/editplayer', async ( req, res ) => {
-  console.log( req.body )
   const { id, name, teamID } = req.body;
   try {
-    const player = await Player.findOneAndUpdate(
+    // Find the player's current team
+    const player = await Player.findOne( { id } );
+
+    // Remove player from previous team
+    const prevTeam = await Team.findOne( { id: player.teamID } );
+    if ( prevTeam ) {
+      prevTeam.playersInTeam = prevTeam.playersInTeam.filter( ( playerId ) => playerId !== id );
+      await prevTeam.save();
+    }
+
+    // Update player's teamID
+    const updatedPlayer = await Player.findOneAndUpdate(
       { id },
       { name, teamID },
       { new: true }
     );
-    io.emit( 'playerUpdated', player );
 
-    const team = await Team.findOne( { id: teamID } );
-    console.log( "player id", player.id )
-    team.playersInTeam.addToSet( player.id );
-    await team.save();
+    // Add player to new team
+    if ( teamID ) {
+      const newTeam = await Team.findOne( { id: teamID } );
+      if ( newTeam ) {
+        newTeam.playersInTeam.addToSet( player.id );
+        await newTeam.save();
+      }
+    }
 
-    res.json( player );
+    io.emit( 'playerUpdated', updatedPlayer );
+
+    res.json( updatedPlayer );
     logger( `POST /editplayer - Updated player: ${name} ` );
   } catch ( err ) {
     logger( `Error: ${err}` );
@@ -321,6 +336,19 @@ app.get( '/api/getteams', async ( req, res ) => {
     // logger( `GET /getteams - Retrieved ${teams.length} teams` );
   } catch ( err ) {
     logger( `Error: ${err}` );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
+app.get( '/api/getteams/:teamid', async ( req, res ) => {
+  logger( `GET /getteams/${req.params.teamid}` );
+  try {
+    const team = await Team.findOne( {
+      id: req.params.teamid,
+    } );
+    res.json( team );
+  } catch ( err ) {
+    logger( err );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
