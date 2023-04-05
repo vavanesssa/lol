@@ -8,8 +8,8 @@ import { deepEqual } from './utils';
 
 export const Player = React.memo(
     ({ id }) => {
-        //player: { id: string, teamID: string, name: string, lives: number, maximumLive: number }
-        const [player, setPlayer] = useState();
+        //player: { id: string, teamID: string, name: string, lives: number }
+        const [player, setPlayer] = useState({ _id: "642b0885321b61d5db5de379", name: "Lucie", id: "c48f8645-4302-4308-8dfe-60f4e4c9561d", teamID: "8b030b29-cba5-4946-b7ca-1272d9b0fd51", lives: 3, __v: 0 });
         const [settings, setSettings] = useState();
         const [loading, setLoading] = useState(false);
         const [editing, setEditing] = useState(false);
@@ -17,21 +17,28 @@ export const Player = React.memo(
         const [message, setMessage] = useState("");
 
         const getPlayer = async () => {
-            const player = await API.getPlayer(id);
-            console.log('REACT/ fetching one player', player)
-            setPlayer(player);
+            const playerFromApi = await API.getPlayer(id);
+            if (playerFromApi && playerFromApi.success && playerFromApi?.name) {
+                console.log('REACT/ fetching one player', playerFromApi)
+                setPlayer(playerFromApi);
+                setEditingName(playerFromApi.name);
+                // setLoading(false);
+            }
         };
 
         const getSettings = async () => {
             const gameSettings = await API.fetchGameSettings();
-            console.log('REACT/ fetching settings', gameSettings)
-            setSettings(gameSettings);
+            if (gameSettings && gameSettings.success) {
+                console.log('REACT/ fetching settings', gameSettings)
+                setSettings(gameSettings);
+            }
         };
 
         const handlePlayerUpdated = (data) => {
             const playerFromSocket = JSON.parse(data);
             // if (playerFromSocket !== player) {
             if (playerFromSocket.id == id && !deepEqual(playerFromSocket, player)) {
+                // setLoading(true);
                 getPlayer();
             }
             // }
@@ -58,6 +65,7 @@ export const Player = React.memo(
 
         useEffect(() => {
             if (!loading) {
+                // setLoading(true);
                 getPlayer();
             }
         }, [loading]);
