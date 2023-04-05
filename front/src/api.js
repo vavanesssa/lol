@@ -4,7 +4,7 @@ console.log( "API_URL", API_URL );
 
 export async function getGame () {
   console.log( "API /getGame" );
-  const response = await fetch( `${API_URL}/getgame` );
+  const response = await fetch( `${API_URL}/game` );
   console.log( "getGame response", response );
   return response.json();
 }
@@ -36,14 +36,14 @@ export async function addLife ( playerId ) {
   return response.json();
 }
 
-export async function addPlayer ( name, id, lives ) {
-  console.log( "API /addPlayer", name, id, lives );
+export async function addPlayer ( name, lives ) {
+  console.log( "API /addPlayer", name, lives );
   const response = await fetch( `${API_URL}/addplayer`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify( { name, id, lives } ),
+    body: JSON.stringify( { name, lives } ),
   } );
   console.log( "addPlayer response", response );
   return response.json();

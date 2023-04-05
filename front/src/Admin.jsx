@@ -18,7 +18,7 @@ const Admin = () => {
   // { players: [{_id: string, name: string, id: string, teamID: string, lives: number, __v: number}], 
   // settings: { _id: string, maximumLives: number, __v: number },
   // teams: [{ _id: string, name: string, id: string, createdAt: string, __v: number }] }
-  const [game, setGame] = useState({ "players": [{ "_id": "642b0885321b61d5db5de379", "name": "Lucie", "id": "c48f8645-4302-4308-8dfe-60f4e4c9561d", "teamID": "8b030b29-cba5-4946-b7ca-1272d9b0fd51", "lives": 3, "__v": 0 }, { "_id": "642b088c321b61d5db5de37d", "name": "Va", "id": "ff10c867-c21a-4fef-bcdf-0e2cb3c0c1a3", "teamID": "d61baa6a-1950-471d-8468-975e11bfd7b1", "lives": 3, "__v": 0 }], "settings": { "_id": "642b0827321b61d5db5de34a", "maximumLives": 3, "__v": 0 }, "teams": [{ "_id": "642b08b1321b61d5db5de3a1", "name": "AAAA", "id": "d61baa6a-1950-471d-8468-975e11bfd7b1", "createdAt": "2023-04-03T17:11:13.742Z", "__v": 0 }, { "_id": "642b08b5321b61d5db5de3a6", "name": "222é", "id": "8b030b29-cba5-4946-b7ca-1272d9b0fd51", "createdAt": "2023-04-03T17:11:17.244Z", "__v": 0 }] });
+  const [game, setGame] = useState();
   const [newTeamName, setNewTeamName] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('');
@@ -27,8 +27,8 @@ const Admin = () => {
 
   const getGame = async () => {
     const gaming = await API.getGame();
-    if (gaming && gaming.success && !deepEqual(gaming, game)) {
-      console.log('REACT/ fetching gaming', game)
+    if (gaming && !deepEqual(gaming, game)) {
+      console.log('REACT/ fetching gaming', gaming)
       setGame(gaming);
     }
   };
@@ -80,8 +80,8 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    getGame();
     socket.connect();
+    getGame();
 
     socket.on('playerAdded', handlePlayerAdded);
     socket.on('playerRemoved', handlePlayerRemoved);
@@ -103,12 +103,10 @@ const Admin = () => {
   }, []);
 
   const handleAddPlayerSubmit = async (e) => {
-    //id devrait être générer côté backend
-    const id = "";
-    console.log("REACT/handleAddPlayerSubmit", { newPlayerName, id });
+    console.log("REACT/handleAddPlayerSubmit", { newPlayerName });
     e.preventDefault();
-    const newPlayer = await API.addPlayer(newPlayerName, id, game.settings.maximumLives);
-    if (newPlayer.success) {
+    const newPlayer = await API.addPlayer(newPlayerName, game.settings.maximumLives);
+    if (newPlayer) {
       setNewPlayerName('');
       socket.emit('playerAdded', newPlayer);
       console.log("REACT/handleAddPlayerSubmit complete");
@@ -119,7 +117,7 @@ const Admin = () => {
     console.log("REACT/handleTeamSubmit", { newTeamName });
     e.preventDefault();
     const newTeam = await API.addTeam(newTeamName);
-    if (newTeam.success) {
+    if (newTeam) {
       setNewTeamName('');
       socket.emit('teamAdded', newTeam);
       console.log("REACT/handleTeamSubmit complete");
@@ -129,7 +127,7 @@ const Admin = () => {
   const handleAddPlayerTeam = async (team, playerId) => {
     console.log("REACT/handleAddPlayerTeam", { newTeamName });
     const updatedTeam = await API.editTeam({ ...team, players: [...team.players, playerID] });
-    if (updatedTeam.success) {
+    if (updatedTeam) {
       socket.emit('teamUpdated', updatedTeam);
     }
   };

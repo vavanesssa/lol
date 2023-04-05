@@ -9,7 +9,7 @@ import { deepEqual } from './utils';
 export const Player = React.memo(
     ({ id }) => {
         //player: { id: string, teamID: string, name: string, lives: number }
-        const [player, setPlayer] = useState({ _id: "642b0885321b61d5db5de379", name: "Lucie", id: "c48f8645-4302-4308-8dfe-60f4e4c9561d", teamID: "8b030b29-cba5-4946-b7ca-1272d9b0fd51", lives: 3, __v: 0 });
+        const [player, setPlayer] = useState();
         const [settings, setSettings] = useState();
         const [loading, setLoading] = useState(false);
         const [editing, setEditing] = useState(false);
@@ -18,7 +18,7 @@ export const Player = React.memo(
 
         const getPlayer = async () => {
             const playerFromApi = await API.getPlayer(id);
-            if (playerFromApi && playerFromApi.success && playerFromApi?.name) {
+            if (playerFromApi && playerFromApi?.name) {
                 console.log('REACT/ fetching one player', playerFromApi)
                 setPlayer(playerFromApi);
                 setEditingName(playerFromApi.name);
@@ -28,7 +28,7 @@ export const Player = React.memo(
 
         const getSettings = async () => {
             const gameSettings = await API.fetchGameSettings();
-            if (gameSettings && gameSettings.success) {
+            if (gameSettings) {
                 console.log('REACT/ fetching settings', gameSettings)
                 setSettings(gameSettings);
             }
@@ -74,7 +74,7 @@ export const Player = React.memo(
             console.log("REACT/handleRemovePlayer", { id });
             setLoading(true);
             const removedid = await API.removePlayer(id);
-            if (removedid.success) {
+            if (removedid) {
                 setLoading(false);
                 socket.emit('clientPlayerRemoved', id);
                 console.log("REACT/handleRemovePlayer complete");
@@ -92,7 +92,7 @@ export const Player = React.memo(
             // }
 
             const updatedPlayer = await API.removeLife(id);
-            if (updatedPlayer.success) {
+            if (updatedPlayer) {
                 setLoading(false);
                 socket.emit("clientLivesUpdate", updatedPlayer);
                 console.log("REACT/handleRemoveLife complete");
@@ -110,7 +110,7 @@ export const Player = React.memo(
             // }
 
             const updatedPlayer = await API.addLife(id);
-            if (updatedPlayer.success) {
+            if (updatedPlayer) {
                 setLoading(false);
                 socket.emit("clientLivesUpdate", updatedPlayer);
             }
@@ -121,7 +121,7 @@ export const Player = React.memo(
             if (!editingName) return;
             setLoading(true);
             const updatedPlayer = await API.editPlayer({ ...player, name: editingName });
-            if (updatedPlayer.success) {
+            if (updatedPlayer) {
                 setEditingName(editingName);
                 setEditing(false);
                 setLoading(false);

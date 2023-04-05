@@ -8,8 +8,8 @@ import { deepEqual } from './utils';
 
 export const Team = React.memo(
     ({ id }) => {
-        //team : {id: string, name: string, players: [{ id: string }]}
-        const [team, setTeam] = useState({ _id: "642b08b1321b61d5db5de3a1", name: "AAAA", id: "d61baa6a-1950-471d-8468-975e11bfd7b1", players: [{ _id: "642b0885321b61d5db5de379", name: "Lucie", id: "c48f8645-4302-4308-8dfe-60f4e4c9561d", teamID: "8b030b29-cba5-4946-b7ca-1272d9b0fd51", lives: 3, __v: 0 }], createdAt: "2023-04-03T17:11:13.742Z", __v: 0 });
+        //team : {id: string, name: string, playersInTeam: [{ id: string }]}
+        const [team, setTeam] = useState();
         const [loading, setLoading] = useState(false);
         const [editing, setEditing] = useState(false);
         const [editingName, setEditingName] = useState("");
@@ -17,7 +17,7 @@ export const Team = React.memo(
 
         const getTeam = async () => {
             const teamFromApi = await API.getTeam(id);
-            if (teamFromApi && teamFromApi.success && teamFromApi?.name) {
+            if (teamFromApi && teamFromApi?.name) {
                 console.log('REACT/ fetching one team', teamFromApi);
                 setTeam(teamFromApi);
                 setEditingName(teamFromApi.name);
@@ -52,8 +52,8 @@ export const Team = React.memo(
 
         const handleRemoveTeam = async () => {
             console.log("REACT/handleRemoveTeam", { id });
-            const response = await API.removeTeam(id);
-            if (response.success) {
+            const removedTeamId = await API.removeTeam(id);
+            if (removedTeamId) {
                 setLoading(false);
                 socket.emit('teamRemoved', id);
                 console.log("REACT/handleRemoveTeam complete");
@@ -71,7 +71,7 @@ export const Team = React.memo(
             // }
 
             // const updatedPlayer = await API.removeLife(id);
-            // if (updatedPlayer.success) {
+            // if (updatedPlayer) {
             //     setLoading(false);
             //     socket.emit("clientLivesUpdate", updatedPlayer);
             //     console.log("REACT/handleRemoveOneLifeTeamPlayer complete");
@@ -89,7 +89,7 @@ export const Team = React.memo(
             // }
 
             // const updatedPlayer = await API.addLife(id);
-            // if (updatedPlayer.success) {
+            // if (updatedPlayer) {
             //     setLoading(false);
             //     socket.emit("clientLivesUpdate", updatedPlayer);
             // }
@@ -100,7 +100,7 @@ export const Team = React.memo(
             if (!editingName) return;
             setLoading(true);
             const updatedTeam = await API.editTeam({ ...team, name: editingName });
-            if (updatedTeam.success) {
+            if (updatedTeam) {
                 setEditingName(editingName);
                 setEditing(false);
                 setLoading(false);
@@ -122,7 +122,6 @@ export const Team = React.memo(
                                         size="small"
                                         autoFocus
                                     />
-
                                     <Button type="submit" disabled={loading} variant="outlined">
                                         Modifier
                                     </Button>
@@ -160,7 +159,7 @@ export const Team = React.memo(
                             </IconButton>
                         </div>
                         <div className={`team-${id}`}>
-                            {team?.players && !!team.players.length && team.players.map((player) => {
+                            {team?.playersInTeam && !!team.playersInTeam.length && team.playersInTeam.map((player) => {
                                 return <Player id={player.id} />;
                             })}
                         </div>
