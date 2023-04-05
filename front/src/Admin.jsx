@@ -65,6 +65,10 @@ const Admin = () => {
     getGame();
   };
 
+  const handlePlayerUpdated = () => {
+    getGame();
+};
+
   const handlePlayersReset = () => {
     getGame();
   };
@@ -87,6 +91,7 @@ const Admin = () => {
 
     socket.on('playerAdded', handlePlayerAdded);
     socket.on('playerRemoved', handlePlayerRemoved);
+    socket.on("playerUpdated", handlePlayerUpdated);
     socket.on('playersReset', handlePlayersReset);
     socket.on('teamAdded', handleTeamAdded);
     socket.on('teamRemoved', handleTeamRemoved);
@@ -97,6 +102,7 @@ const Admin = () => {
 
       socket.off('playerAdded', handlePlayerAdded);
       socket.off('playerRemoved', handlePlayerRemoved);
+      socket.on("playerUpdated", handlePlayerUpdated);
       socket.off('playersReset', handlePlayersReset);
       socket.off('teamAdded', handleTeamAdded);
       socket.off('teamRemoved', handleTeamRemoved);
@@ -169,18 +175,16 @@ const Admin = () => {
   useEffect(() => {
     if (game && game?.players) {
       setRowData(game.players);
-      setColumnDefs([
-        { field: 'name', rowDrag: true },
-        { field: 'id', hide: true },
-        { field: 'lives' },
-      ])
     }
   }, [game]);
 
-  const onGridReady = (params) => {
-    // console.log("game onGridReady ",game)
+  const onGridReady = useCallback((params) => {
     addDropZones(params.api);
     addCheckboxListener(params);
+  }, []);
+
+  const onRowDataUpdated = (event) => {
+    addDropZones(event.api);
   };
 
   const addCheckboxListener = (params) => {
@@ -198,8 +202,8 @@ const Admin = () => {
           return tileContainer;
         },
         onDragStop: (params) => {
-          console.log("onDragStop ",team,params?.node?.data?.id)
-          const exist = team.playersInTeam.find((player) => player.id == params.node.data.id);
+          console.log("onDragStop ", team, params?.node?.data?.id)
+          const exist = team.playersInTeam.find((id) => id == params.node.data.id);
           if (!exist) {
             handleAddPlayerTeam(team, params.node.data.id);
           }
@@ -257,10 +261,7 @@ const Admin = () => {
               rowDragManaged={true}
               animateRows={true}
               onGridReady={onGridReady}
-              onRowDataUpdated={(event) => {
-                console.log("onRowDataChanged ",event)
-                addDropZones(event.api);
-              }}
+              onRowDataUpdated={onRowDataUpdated}
             ></AgGridReact>
           </div>
         </div>
