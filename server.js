@@ -26,18 +26,21 @@ const gameSettingsSchema = new mongoose.Schema( {
 let activeUsers = 0;
 const GameSettings = mongoose.model( "GameSettings", gameSettingsSchema );
 const playerSchema = new mongoose.Schema( {
+  id: { type: String, default: uuidv4 },
   name: String,
-  id: String,
   teamID: String,
   lives: { type: Number, default: 10 },
 } )
+
 const Player = mongoose.model( 'Player', playerSchema )
 
 const teamSchema = new mongoose.Schema( {
   name: String,
   id: String,
   createdAt: { type: Date, default: Date.now },
+  playersInTeam: [ { type: String, ref: 'Player.id' } ] // update reference to Player.id
 } );
+
 const Team = mongoose.model( 'Team', teamSchema );
 
 // App Middlewares
@@ -133,6 +136,12 @@ app.post( '/api/editplayer', async ( req, res ) => {
       { new: true }
     );
     io.emit( 'playerUpdated', player );
+
+    const team = await Team.findOne( { id: teamID } );
+    console.log( "player id", player.id )
+    team.playersInTeam.addToSet( player.id );
+    await team.save();
+
     res.json( player );
     logger( `POST /editplayer - Updated player: ${name} ` );
   } catch ( err ) {
@@ -146,6 +155,14 @@ app.post( '/api/removeplayer', async ( req, res ) => {
   try {
     const player = await Player.findOneAndDelete( { id } );
     io.emit( 'playerRemoved', id );
+
+    // Remove player's id from their team's playersInTeam array
+    const team = await Team.findOne( { id: player.teamID } );
+    if ( team ) {
+      team.playersInTeam = team.playersInTeam.filter( ( playerId ) => playerId !== id );
+      await team.save();
+    }
+
     res.json( player );
     logger( `POST /removeplayer - Removed player: ${player.name}` );
   } catch ( err ) {
@@ -331,6 +348,10 @@ app.post( '/api/removeteam', async ( req, res ) => {
   try {
     const team = await Team.findOneAndDelete( { id } );
     io.emit( 'teamRemoved', id );
+
+    // Set the teamID to empty string for all players in the removed team
+    await Player.updateMany( { teamID: team.id }, { teamID: '' } );
+
     res.json( team );
     logger( `POST /removeteam - Removed team: ${team.name}` );
   } catch ( err ) {
