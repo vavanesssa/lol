@@ -7,7 +7,7 @@ import style from "./styles.module.scss";
 
 export const Player = React.memo(
     ({ id }) => {
-        //player: { id: string, teamID: string, name: string, lives: number }
+        //player: { id: string, teamID: string, name: string, lives: number, maximumLive: number }
         const [player, setPlayer] = useState();
         const [loading, setLoading] = useState(false);
         const [editing, setEditing] = useState(false);
@@ -29,12 +29,11 @@ export const Player = React.memo(
         };
 
         const handleLivesUpdated = (data) => {
-            const playerFromSocket = JSON.parse(data);
-            // if (playerFromSocket !== player) {
-                if(playerFromSocket.id == id){
-                    getPlayer();
-                }
-            // }
+            const players = JSON.parse(data);
+            const playerToUpdate = players.find((p) => p.id == id);
+            if(playerToUpdate){
+                setPlayer({...player, lives: playerToUpdate.lives});
+            }
         };
 
         useEffect(() => {

@@ -6,17 +6,12 @@ import {
 
 import Admin from './Admin';
 import ErrorPage from './ErrorPage';
-import PlayerView from './PlayerView';
 
 const router = createBrowserRouter( [
   {
     path: "/",
     element: <Admin />,
     errorElement: <ErrorPage />,
-  },
-  {
-    path: "/players",
-    element: <PlayerView />,
   },
 ] );
 const App = () => {
