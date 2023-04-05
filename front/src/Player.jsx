@@ -7,6 +7,7 @@ import style from "./styles.module.scss";
 
 export const Player = React.memo(
     ({ id }) => {
+        //player: { id: string, teamID: string, name: string, lives: number }
         const [player, setPlayer] = useState();
         const [loading, setLoading] = useState(false);
         const [editing, setEditing] = useState(false);
@@ -102,7 +103,7 @@ export const Player = React.memo(
             e.preventDefault();
             if (!editingName) return;
             setLoading(true);
-            const updatedPlayer = await API.editPlayer(id, editingName, player.teamID);
+            const updatedPlayer = await API.editPlayer({...player, name: editingName});
             if (updatedPlayer.success) {
                 setEditingName(editingName);
                 setEditing(false);
@@ -134,7 +135,7 @@ export const Player = React.memo(
                         <AddIcon />
                     </IconButton>
                 </div>
-                {!!player && player?.name && player?.lives && player?.teamID && (
+                {!!player && player?.name && player?.lives && (
                     <span>
                         {Array(player.lives)
                             .fill()
@@ -195,7 +196,8 @@ export const Player = React.memo(
                                 </form>
                             ) : (
                                 <div>
-                                    {player.name} {player.teamID && teams.find((team) => team.id === player.teamID)?.name}
+                                    {player.name} 
+                                    {/* {player?.teamID && teams.find((team) => team.id === player?.teamID)?.name} */}
                                 </div>
 
                             )}

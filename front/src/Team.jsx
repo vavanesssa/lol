@@ -6,7 +6,8 @@ import socket from './socket';
 import { Player } from './Player';
 
 export const Team = React.memo(
-    ({ id, teamPlayers }) => {
+    ({ id }) => {
+        //team : {id: string, name: string, players: { id: string }}
         const [team, setTeam] = useState();
         const [loading, setLoading] = useState(false);
         const [editing, setEditing] = useState(false);
@@ -55,7 +56,7 @@ export const Team = React.memo(
             e.preventDefault();
             if (!editingName) return;
             setLoading(true);
-            const updatedTeam = await API.editTeam(id, editingName);
+            const updatedTeam = await API.editTeam({...team, name: editingName});
             if (updatedTeam.success) {
                 setEditingName(editingName);
                 setEditing(false);
@@ -109,8 +110,8 @@ export const Team = React.memo(
                             </IconButton>
                         </div>
                         <div className={`team-${id}`}>
-                            {teamPlayers.map((teamPlayer) => {
-                                return teamPlayer.teamID == id && <Player id={teamPlayer.player.id} />;
+                            {team?.players && !!team.players.length && team.players.map((player) => {
+                                return <Player id={player.id} />;
                             })}
                         </div>
                     </React.Fragment>
