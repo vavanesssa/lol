@@ -402,6 +402,7 @@ app.post( '/api/editteam', async ( req, res ) => {
         { teamID: team.id },
         { new: true }
       );
+      io.emit( 'playerUpdated', playerUpdated );
       logger( `POST /Edit player: ${playerID} ${JSON.stringify(playerUpdated, null, 4)} ${JSON.stringify(team, null, 4)}` );
     }
     io.emit( 'teamUpdated', teamUpdated );

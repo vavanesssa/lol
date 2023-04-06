@@ -57,8 +57,9 @@ export const PlayerList = () => {
         };
     
         const handlePlayerUpdated = (data) => {
-            const playerFound = players.find(p => p.id == playerFromSocket.id);
-            if (playerFound && !deepEqual(playerFromSocket, playerFound)) {
+            const playerFromSocket = data;
+            const playerFound = players && players?.find(p => p.id == playerFromSocket.id);
+            if (!players || (playerFound && !deepEqual(playerFromSocket, playerFound))) {
                 getPlayers();
             }
         };
@@ -115,21 +116,17 @@ export const PlayerList = () => {
     }, []);
 
     useEffect(() => {
+        console.log("handleAddPlayerTeam ",players)
         if (players) {
             const playerWithoutTeam = players.filter(p => p.teamID == "");
+            console.log("handleAddPlayerTeam ",playerWithoutTeam)
             setRowData(playerWithoutTeam);
         }
     }, [players]);
 
     const handleAddPlayerTeam = async (team, playerID) => {
         console.log("REACT/handleAddPlayerTeam",team,playerID);
-        const updatedTeam = await API.editTeam({ ...team, playersInTeam: [...team.playersInTeam, playerID] }, playerID);
-        if (updatedTeam) {
-          socket.emit('teamUpdated', updatedTeam);
-          setTimeout(() => {
-            getPlayers();
-          }, 200);
-        }
+        await API.editTeam({ ...team, playersInTeam: [...team.playersInTeam, playerID] }, playerID);
       };
 
     const onGridReady = useCallback((params) => {
