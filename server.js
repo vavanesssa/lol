@@ -177,6 +177,7 @@ app.post( '/api/removeplayer', async ( req, res ) => {
     if ( team ) {
       team.playersInTeam = team.playersInTeam.filter( ( playerId ) => playerId !== id );
       await team.save();
+      io.emit( 'teamUpdated', team );
     }
 
     res.json( player );
@@ -187,22 +188,22 @@ app.post( '/api/removeplayer', async ( req, res ) => {
   }
 } );
 
-app.post( '/api/updateteam', async ( req, res ) => {
-  logger( 'POST /updateteam' );
-  try {
-    const { id, teamID } = req.body;
-    const player = await Player.findOneAndUpdate(
-      { id },
-      { teamID },
-      { new: true }
-    );
-    io.emit( 'teamUpdated', player );
-    res.json( player );
-  } catch ( err ) {
-    logger( err );
-    return res.status( 500 ).json( { error: 'Internal Server Error' } );
-  }
-} );
+// app.post( '/api/updateteam', async ( req, res ) => {
+//   logger( 'POST /updateteam' );
+//   try {
+//     const { id, teamID } = req.body;
+//     const player = await Player.findOneAndUpdate(
+//       { id },
+//       { teamID },
+//       { new: true }
+//     );
+//     io.emit( 'teamUpdated', player );
+//     res.json( player );
+//   } catch ( err ) {
+//     logger( err );
+//     return res.status( 500 ).json( { error: 'Internal Server Error' } );
+//   }
+// } );
 
 app.post( "/api/removelive", async ( req, res ) => {
   const { id } = req.body;
@@ -355,7 +356,7 @@ app.get( '/api/getteam/:teamid', async ( req, res ) => {
 } );
 
 app.post( '/api/editteam', async ( req, res ) => {
-  const { team } = req.body;
+  const { team, playerID } = req.body;
 
   try {
     const id = team.id;
@@ -364,9 +365,17 @@ app.post( '/api/editteam', async ( req, res ) => {
       { name: team.name, playersInTeam: team.playersInTeam },
       { new: true }
     );
+    if(playerID){
+      const playerUpdated = await Player.findOneAndUpdate(
+        { id: playerID },
+        { teamID: team.id },
+        { new: true }
+      );
+      logger( `POST /Edit player: ${playerID} ${JSON.stringify(playerUpdated, null, 4)} ${JSON.stringify(team, null, 4)}` );
+    }
     io.emit( 'teamUpdated', teamUpdated );
     res.json( teamUpdated );
-    logger( `POST /editteam - Updated team: ${JSON.stringify(teamUpdated, null, 4)}` );
+    logger( `POST /editteam - Updated team: ${playerID} ${JSON.stringify(team, null, 4)}` );
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );

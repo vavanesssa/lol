@@ -179,14 +179,14 @@ export async function getTeam (id) {
   return team;
 }
 
-export async function editTeam ( team ) {
-  console.log( "API /editTeam", team );
+export async function editTeam ( team, playerID ) {
+  console.log( "API /editTeam", team, playerID );
   const response = await fetch( `${API_URL}/editteam`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify( { team: team } ),
+    body: JSON.stringify( { team: team, playerID: playerID } ),
   } );
 
   const updatedTeam = await response.json();

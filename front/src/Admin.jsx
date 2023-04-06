@@ -144,8 +144,8 @@ const Admin = () => {
   };
 
   const handleAddPlayerTeam = async (team, playerID) => {
-    console.log("REACT/handleAddPlayerTeam", { newTeamName });
-    const updatedTeam = await API.editTeam({ ...team, playersInTeam: [...team.playersInTeam, playerID] });
+    console.log("REACT/handleAddPlayerTeam",team,playerID);
+    const updatedTeam = await API.editTeam({ ...team, playersInTeam: [...team.playersInTeam, playerID] }, playerID);
     if (updatedTeam) {
       socket.emit('teamUpdated', updatedTeam);
     }
