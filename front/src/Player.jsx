@@ -159,7 +159,7 @@ export const Player = React.memo(
                         <AddIcon />
                     </IconButton>
                 </div>
-                {!!player && player?.name && player?.lives && (
+                {!!player && player?.name && player.lives.length !== 0 && (
                     <span>
                         {Array(player.lives)
                             .fill()
