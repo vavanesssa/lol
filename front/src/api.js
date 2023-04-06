@@ -36,6 +36,19 @@ export async function addLife ( playerId ) {
   return response.json();
 }
 
+export async function ejectPlayerTeam ( player ) {
+  console.log( "API /ejectPlayerTeam", player );
+  const response = await fetch( `${API_URL}/ejectplayerteam`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify( { player: player } ),
+  } );
+  console.log( "ejectPlayerTeam response", response );
+  return response.json();
+}
+
 export async function addPlayer ( name, lives ) {
   console.log( "API /addPlayer", name, lives );
   const response = await fetch( `${API_URL}/addplayer`, {

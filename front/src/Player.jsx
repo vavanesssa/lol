@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, IconButton, TextField, Alert } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, Edit as EditIcon, DeleteForever as DeleteForeverIcon, Settings as SettingsIcon } from '@mui/icons-material';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import * as API from './api';
 import socket from './socket';
 import style from "./styles.module.scss";
@@ -45,15 +46,15 @@ export const Player = React.memo(
         };
 
         const handleLivesUpdated = (data) => {
-            if(Array.isArray(data)){
+            if (Array.isArray(data)) {
                 const playersFromSocket = data;
                 const playerToUpdate = playersFromSocket.find((p) => p.id == id);
                 if (playerToUpdate && !deepEqual(playerToUpdate, player)) {
                     setPlayer({ ...player, lives: playerToUpdate.lives });
                 }
-            }else if(data?.id){
+            } else if (data?.id) {
                 const playerFromSocket = data;
-                console.log("playerFromSocket ",playerFromSocket)
+                console.log("playerFromSocket ", playerFromSocket)
                 setPlayer({ ...player, lives: playerFromSocket.lives });
             }
         };
@@ -122,6 +123,23 @@ export const Player = React.memo(
             }
         };
 
+        const handleEjectPlayerTeam = async () => {
+            console.log("REACT/handleAddLife", { id });
+            setLoading(true);
+            // const player = players.find((p) => p.id === id);
+
+            // if (player && player.lives >= settings.maximumLives) {
+            //     console.log("max reached");
+            //     return;
+            // }
+
+            const ejectedPlayerTeam = await API.ejectPlayerTeam(player);
+            if (ejectedPlayerTeam) {
+                setLoading(false);
+                socket.emit("ejectedPlayer", ejectedPlayerTeam);
+            }
+        }
+
         const handleEditSubmit = async (e) => {
             e.preventDefault();
             if (!editingName) return;
@@ -152,6 +170,11 @@ export const Player = React.memo(
                     <IconButton onClick={() => handleRemovePlayer()} disabled={loading} color="secondary" aria-label="add an alarm">
                         <DeleteForeverIcon />
                     </IconButton>
+                    {!!player && player.teamID != "" && (
+                        <IconButton onClick={() => handleEjectPlayerTeam()} disabled={loading} color="secondary" aria-label="add an alarm">
+                            <ExitToAppIcon />
+                        </IconButton>
+                    )}
                     <IconButton onClick={() => handleRemoveLife()} disabled={loading} color="secondary" aria-label="add an alarm">
                         <RemoveIcon />
                     </IconButton>

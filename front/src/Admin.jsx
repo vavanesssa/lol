@@ -56,6 +56,13 @@ const Admin = () => {
   //     fetchPlayers()
   //   }, 10000);
   // }, []);
+  const handleTeamUpdated = () => {
+    getGame();
+  };
+
+  const handleEjectedPlayer = () => {
+    getGame();
+  };
 
   const handlePlayerAdded = () => {
     getGame();
@@ -88,7 +95,8 @@ const Admin = () => {
   useEffect(() => {
     socket.connect();
     getGame();
-
+    socket.on("teamUpdated", handleTeamUpdated);
+    socket.on("ejectedPlayer", handleEjectedPlayer);
     socket.on('playerAdded', handlePlayerAdded);
     socket.on('playerRemoved', handlePlayerRemoved);
     socket.on("playerUpdated", handlePlayerUpdated);
@@ -99,7 +107,8 @@ const Admin = () => {
 
     return () => {
       socket.disconnect();
-
+      socket.off("teamUpdated", handleTeamUpdated);
+      socket.off("ejectedPlayer", handleEjectedPlayer);
       socket.off('playerAdded', handlePlayerAdded);
       socket.off('playerRemoved', handlePlayerRemoved);
       socket.on("playerUpdated", handlePlayerUpdated);
@@ -147,6 +156,8 @@ const Admin = () => {
     console.log("REACT/handleAddPlayerTeam",team,playerID);
     const updatedTeam = await API.editTeam({ ...team, playersInTeam: [...team.playersInTeam, playerID] }, playerID);
     if (updatedTeam) {
+      const playerWithoutTeam = game.players.filter(p => p.teamID == "" );
+      setRowData(playerWithoutTeam);
       socket.emit('teamUpdated', updatedTeam);
     }
   };
@@ -174,7 +185,8 @@ const Admin = () => {
 
   useEffect(() => {
     if (game && game?.players) {
-      setRowData(game.players);
+      const playerWithoutTeam = game.players.filter(p => p.teamID == "" );
+      setRowData(playerWithoutTeam);
     }
   }, [game]);
 

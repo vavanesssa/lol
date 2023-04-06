@@ -27,7 +27,15 @@ export const Team = React.memo(
 
         const handleTeamUpdated = (data) => {
             const teamFromSocket = data;
-            // if (teamFromSocket !== team) {
+            if (teamFromSocket.id == id && !deepEqual(teamFromSocket, team)) {
+                // setLoading(true);
+                getTeam();
+            }
+            // 
+        };
+
+        const handleEjectedPlayer = (data) => {
+            const teamFromSocket = data;
             if (teamFromSocket.id == id && !deepEqual(teamFromSocket, team)) {
                 // setLoading(true);
                 getTeam();
@@ -38,8 +46,10 @@ export const Team = React.memo(
         useEffect(() => {
             getTeam();
             socket.on("teamUpdated", handleTeamUpdated);
+            socket.on("ejectedPlayer", handleEjectedPlayer);
             return () => {
                 socket.off('teamUpdated', handleTeamUpdated);
+                socket.off("ejectedPlayer", handleEjectedPlayer);
             };
         }, []);
 

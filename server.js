@@ -126,6 +126,36 @@ app.post( '/api/addplayer', async ( req, res ) => {
   }
 } );
 
+app.post( '/api/ejectplayerteam', async ( req, res ) => {
+  const { player } = req.body;
+  try {
+    const id = player.id;
+    const teamID = player.teamID;
+    const updatedPlayer = await Player.findOneAndUpdate(
+      { id },
+      { teamID: "" },
+      { new: true }
+    );
+
+    const team = await Team.findOne( { id: teamID } );
+    team.playersInTeam = team.playersInTeam.filter( ( playerId ) => playerId !== id );
+
+    const updatedTeam = await Team.findOneAndUpdate(
+      { id: teamID },
+      { playersInTeam: team.playersInTeam },
+      { new: true }
+    );
+
+    io.emit( 'ejectedPlayer', updatedTeam );
+
+    res.json( updatedTeam );
+    logger( `POST /ejectplayerteam: ${JSON.stringify(player, null, 4)} ${JSON.stringify(team, null, 4)} ` );
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
 app.post( '/api/editplayer', async ( req, res ) => {
   const { player, teamID } = req.body;
   try {
