@@ -12,6 +12,7 @@ import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import './style.css';
 import { Team } from './Team';
+import { Player } from './Player';
 import { deepEqual } from './utils';
 
 const Admin = () => {
@@ -170,9 +171,12 @@ const Admin = () => {
   const gridStyle = useMemo(() => ({ height: '400px', width: '100%' }), []);
   const [rowData, setRowData] = useState();
   const [columnDefs, setColumnDefs] = useState([
-    { field: 'name', rowDrag: true },
-    { field: 'id', hide: true },
-    { field: 'lives' },
+    { field: 'id', cellRenderer: params => {
+      console.log("field ",params)
+      return <Player id={params.value} />;
+  }, rowDrag: true, autoHeight: true, },
+    { field: 'name', hide: true },
+    { field: 'lives', hide: true },
   ]);
   const defaultColDef = useMemo(() => {
     return {

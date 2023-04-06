@@ -79,6 +79,11 @@ app.get( '/api/game', async ( req, res ) => {
     const players = await Player.find();
     const settings = await GameSettings.findOne();
     const teams = await Team.find();
+    // const updatedPlayer = await Team.findOneAndUpdate(
+    //   { id: "fa06f5cb-6d89-4eac-b5fe-8d04087be722"    },
+    //   { playersInTeam: [] },
+    //   { new: true }
+    // );
     res.json( { players, settings, teams } );
     // logger(` GET / game - Retrieved ${players.length} players, ${teams.length} teams, and game settings`);
   } catch ( err ) {

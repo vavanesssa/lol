@@ -1,4 +1,24 @@
-  .drop-wrapper{
+  .ag-theme-alpine {
+    --ag-foreground-color: black;
+    --ag-background-color: #009de2;
+    --ag-header-foreground-color: black;
+    --ag-header-background-color: #009de2;
+    --ag-odd-row-background-color: rgb(0, 0, 0, 0.03);
+    --ag-header-column-resize-handle-color: #009de2;
+
+    --ag-font-size: 17px;
+    --ag-font-family: monospace;
+
+    /* disable all borders */
+    --ag-borders: 1px solid;
+    --ag-border-color: black;
+    /* then add back a border between rows */
+    --ag-row-border-style: solid;
+    --ag-row-border-width: 0px;
+    --ag-row-border-color: black;
+  }
+
+  .drop-wrapper {
     display: flex;
     flex-direction: column;
     position: relative;
@@ -6,13 +26,13 @@
     flex: 1;
     gap: 8px;
   }
-  
+
   .example-wrapper {
     display: flex;
     height: 100%;
     flex-direction: column;
   }
-  
+
   .drop-containers {
     display: flex;
     flex-direction: row;
@@ -20,15 +40,15 @@
     overflow: hidden;
     flex: 1;
   }
-  
+
   .toolbar {
     height: 30px;
   }
-  
+
   .grid-wrapper {
     flex: 1;
   }
-  
+
   .drop-col {
     padding-left: 10px;
     box-sizing: border-box;
@@ -36,25 +56,26 @@
     display: flex;
     flex-direction: column;
   }
-  
+
   .drop-target,
   .tile {
     color: black;
   }
-  
+
   .drop-target {
     display: flex;
     flex-direction: row;
-    border: 1px solid rgba(0,0,0,0.87);
-    background-color: #5050505e;;
+    border: 1px solid rgba(0, 0, 0, 0.87);
+    background-color: #5050505e;
+    ;
     padding: 8px;
     gap: 12px;
   }
-  
+
   div[class^="team"] {
     box-sizing: border-box;
-    border: 1px solid rgba(0,0,0,0.87);
-    background-color: #5050505e;
+    border: 1px solid rgba(0, 0, 0, 0.87);
+    background-color: none;
     overflow: auto;
     display: flex;
     align-items: flex-start;
@@ -63,7 +84,7 @@
     flex: 1 1 auto;
     flex-direction: column;
   }
-  
+
   .tile {
     width: 100%;
     height: auto;
@@ -72,17 +93,15 @@
     border-radius: 5px;
     background: white;
   }
-  
+
   .green-row {
     background-color: #ddffdd !important;
   }
-  
+
   .red-row {
     background-color: #ffdddd !important;
   }
-  
+
   .blue-row {
     background-color: #ddddff !important;
   }
-  
-  
