@@ -96,6 +96,17 @@ export async function updateGameSettings ( maximumLives ) {
   return response.json();
 }
 
+export async function clearHistory () {
+  console.log( 'API /clearHistory' );
+  const response = await fetch( `${API_URL}/clearhistory`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  } );
+
+}
+
 export async function resetLives ( maximumLives ) {
   console.log( "API /resetLives", maximumLives );
   const response = await fetch( `${API_URL}/resetlives`, {

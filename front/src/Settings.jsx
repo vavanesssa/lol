@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { addPlayer, getPlayers, addLife, fetchGameSettings, updateGameSettings, resetLives, removePlayer, removeLife, editPlayer, addTeam, getTeams, editTeam, removeTeam } from './api';
+import * as API from './api';
 import socket from './socket';
 import { Button, Box, IconButton, TextField, Slider, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, Select, MenuItem, useTheme } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, Edit as EditIcon, DeleteForever as DeleteForeverIcon, Settings as SettingsIcon } from '@mui/icons-material';
@@ -21,18 +21,24 @@ const Settings = () => {
 
   const fetchGameSettingsData = async () => {
     console.log( 'REACT/ fetching game settings' );
-    const settings = await fetchGameSettings();
+    const settings = await API.fetchGameSettings();
     setMaximumLives( settings.maximumLives );
   };
 
   const updateGameSettingsData = async () => {
-    await updateGameSettings( maximumLives );
+    await API.updateGameSettings( maximumLives );
   };
 
   const resetLivesData = async () => {
-    const updatedPlayers = await resetLives( maximumLives );
+    const updatedPlayers = await API.resetLives( maximumLives );
 
     handleClose()
+  };
+
+  const resetGameHistory = async () => {
+    await API.clearHistory();
+
+    // optionally, update the UI to reflect the cleared history
   };
 
   useEffect( () => {
@@ -73,6 +79,10 @@ const Settings = () => {
 
           <Button onClick={ handleClose } autoFocus>
             FERMER
+          </Button>
+
+          <Button onClick={ resetGameHistory } autoFocus>
+            EFFACER L'HISTORIQUE
           </Button>
         </DialogActions>
       </Dialog>

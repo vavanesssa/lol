@@ -146,6 +146,17 @@ app.get( '/api/gethistory', async ( req, res ) => {
   }
 } );
 
+app.post( '/api/clearhistory', async ( req, res ) => {
+  try {
+    await History.deleteMany();
+    logger( `POST /clearhistory - Removed all history logs` );
+    res.status( 204 ).send();
+  } catch ( err ) {
+    logger( `Error: ${err}` );
+    return res.status( 500 ).json( { error: 'Internal Server Error' } );
+  }
+} );
+
 app.post( '/api/addplayer', async ( req, res ) => {
   const { name, lives } = req.body;
   try {
