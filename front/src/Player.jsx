@@ -45,10 +45,16 @@ export const Player = React.memo(
         };
 
         const handleLivesUpdated = (data) => {
-            const players = data;
-            const playerToUpdate = players.find((p) => p.id == id);
-            if (playerToUpdate && !deepEqual(playerToUpdate, player)) {
-                setPlayer({ ...player, lives: playerToUpdate.lives });
+            if(Array.isArray(data)){
+                const playersFromSocket = data;
+                const playerToUpdate = playersFromSocket.find((p) => p.id == id);
+                if (playerToUpdate && !deepEqual(playerToUpdate, player)) {
+                    setPlayer({ ...player, lives: playerToUpdate.lives });
+                }
+            }else if(data?.id){
+                const playerFromSocket = data;
+                console.log("playerFromSocket ",playerFromSocket)
+                setPlayer({ ...player, lives: playerFromSocket.lives });
             }
         };
 
