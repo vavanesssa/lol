@@ -34,22 +34,11 @@ export const Team = React.memo(
             // 
         };
 
-        const handleEjectedPlayer = (data) => {
-            const teamFromSocket = data;
-            if (teamFromSocket.id == id && !deepEqual(teamFromSocket, team)) {
-                // setLoading(true);
-                getTeam();
-            }
-            // 
-        };
-
         useEffect(() => {
             getTeam();
             socket.on("teamUpdated", handleTeamUpdated);
-            socket.on("ejectedPlayer", handleEjectedPlayer);
             return () => {
                 socket.off('teamUpdated', handleTeamUpdated);
-                socket.off("ejectedPlayer", handleEjectedPlayer);
             };
         }, []);
 

@@ -146,7 +146,8 @@ app.post( '/api/ejectplayerteam', async ( req, res ) => {
       { new: true }
     );
 
-    io.emit( 'ejectedPlayer', updatedTeam );
+    io.emit( 'ejectedPlayer', updatedPlayer );
+    io.emit( 'teamUpdated', updatedTeam );
 
     res.json( updatedTeam );
     logger( `POST /ejectplayerteam: ${JSON.stringify(player, null, 4)} ${JSON.stringify(team, null, 4)} ` );
@@ -200,7 +201,7 @@ app.post( '/api/removeplayer', async ( req, res ) => {
   const { id } = req.body;
   try {
     const player = await Player.findOneAndDelete( { id } );
-    io.emit( 'playerRemoved', id );
+    io.emit( 'playerRemoved', player );
 
     // Remove player's id from their team's playersInTeam array
     const team = await Team.findOne( { id: player.teamID } );

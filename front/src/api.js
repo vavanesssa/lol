@@ -17,7 +17,7 @@ export async function getPlayers () {
 }
 
 export async function getPlayer (id) {
-  console.log( "API /getPlayers" );
+  console.log( "API /getPlayer" );
   const response = await fetch( `${API_URL}/getplayer/${id}` );
   console.log( "getPlayer response", response );
   return response.json();
