@@ -71,17 +71,23 @@ const Admin = () => {
     getGame();
   };
 
+  const handleTeamUpdated = (data) => {
+        getGame();
+};
+
   useEffect(() => {
     socket.connect();
     getGame();
     socket.on('teamAdded', handleTeamAdded);
     socket.on('teamRemoved', handleTeamRemoved);
+    socket.on("teamUpdated", handleTeamUpdated);
     socket.on('updateSettings', handleUpdateSettings);
 
     return () => {
       socket.disconnect();
       socket.off('teamAdded', handleTeamAdded);
       socket.off('teamRemoved', handleTeamRemoved);
+      socket.off("teamUpdated", handleTeamUpdated);
       socket.off('updateSettings', handleUpdateSettings);
     };
   }, []);
