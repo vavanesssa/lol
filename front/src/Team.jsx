@@ -21,36 +21,35 @@ export const Team = React.memo(
                 console.log('REACT/ fetching one team', teamFromApi);
                 setTeam(teamFromApi);
                 setEditingName(teamFromApi.name);
-                // setLoading(false);
             }
-        };
-
-        const handleTeamUpdated = (data) => {
-            const teamFromSocket = data;
-            if (teamFromSocket.id == id && !deepEqual(teamFromSocket, team)) {
-                // setLoading(true);
-                getTeam();
-            }
-            // 
         };
 
         useEffect(() => {
             getTeam();
+        }, []);
+
+        useEffect(() => {
+            const handleTeamUpdated = (data) => {
+                const teamFromSocket = data;
+                if (teamFromSocket.id == id && !deepEqual(teamFromSocket, team)) {
+                    getTeam();
+                }
+            };
             socket.on("teamUpdated", handleTeamUpdated);
             return () => {
                 socket.off('teamUpdated', handleTeamUpdated);
             };
-        }, []);
+        }, [team]);
 
         useEffect(() => {
             if (!loading) {
-                // setLoading(true);
                 getTeam();
             }
         }, [loading]);
 
         const handleRemoveTeam = async () => {
             console.log("REACT/handleRemoveTeam", { id });
+            setLoading(true);
             const removedTeamId = await API.removeTeam(id);
             if (removedTeamId) {
                 setLoading(false);

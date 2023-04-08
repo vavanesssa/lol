@@ -23,7 +23,6 @@ export const Player = React.memo(
                 console.log('REACT/ fetching one player', playerFromApi)
                 setPlayer(playerFromApi);
                 setEditingName(playerFromApi.name);
-                // setLoading(false);
             }
         };
 
@@ -35,47 +34,40 @@ export const Player = React.memo(
             }
         };
 
-        const handlePlayerUpdated = (data) => {
-            const playerFromSocket = data;
-            // if (playerFromSocket !== player) {
-            if (playerFromSocket.id == id && !deepEqual(playerFromSocket, player)) {
-                // setLoading(true);
-                getPlayer();
-            }
-            // }
-        };
-
-        const handleLivesUpdated = (data) => {
-            if (Array.isArray(data)) {
-                const playersFromSocket = data;
-                const playerToUpdate = playersFromSocket.find((p) => p.id == id);
-                if (playerToUpdate && !deepEqual(playerToUpdate, player)) {
-                    setPlayer({ ...player, lives: playerToUpdate.lives });
-                }
-            } else if (data?.id) {
-                const playerFromSocket = data;
-                console.log("playerFromSocket ", playerFromSocket)
-                setPlayer({ ...player, lives: playerFromSocket.lives });
-            }
-        };
-
         useEffect(() => {
             getPlayer();
             getSettings();
+        }, []);
+
+        useEffect(() => {
+            const handlePlayerUpdated = (data) => {
+                const playerFromSocket = data;
+                if (playerFromSocket.id == id && !deepEqual(playerFromSocket, player)) {
+                    getPlayer();
+                }
+            };
+    
+            const handleLivesUpdated = (data) => {
+                if (Array.isArray(data)) {
+                    const playersFromSocket = data;
+                    const playerToUpdate = playersFromSocket.find((p) => p.id == id);
+                    if (playerToUpdate && !deepEqual(playerToUpdate, player)) {
+                        setPlayer({ ...player, lives: playerToUpdate.lives });
+                    }
+                } else if (data?.id) {
+                    const playerFromSocket = data;
+                    if (playerFromSocket.id == id && !deepEqual(playerFromSocket, player)) {
+                        setPlayer({ ...player, lives: playerFromSocket.lives });
+                    }
+                }
+            };
             socket.on("playerUpdated", handlePlayerUpdated);
             socket.on('livesUpdated', handleLivesUpdated);
             return () => {
                 socket.off('playerUpdated', handlePlayerUpdated);
                 socket.off('livesUpdated', handleLivesUpdated);
             };
-        }, []);
-
-        useEffect(() => {
-            if (!loading) {
-                // setLoading(true);
-                getPlayer();
-            }
-        }, [loading]);
+        }, [player]);
 
         const handleRemovePlayer = async () => {
             console.log("REACT/handleRemovePlayer", { id });
@@ -101,7 +93,7 @@ export const Player = React.memo(
             const updatedPlayer = await API.removeLife(id);
             if (updatedPlayer) {
                 setLoading(false);
-                socket.emit("clientLivesUpdate", updatedPlayer);
+                // socket.emit("clientLivesUpdate", updatedPlayer);
                 console.log("REACT/handleRemoveLife complete");
             }
         };
@@ -119,7 +111,7 @@ export const Player = React.memo(
             const updatedPlayer = await API.addLife(id);
             if (updatedPlayer) {
                 setLoading(false);
-                socket.emit("clientLivesUpdate", updatedPlayer);
+                // socket.emit("clientLivesUpdate", updatedPlayer);
             }
         };
 
