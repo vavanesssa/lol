@@ -1,3 +1,4 @@
+// Imports
 const express = require( 'express' )
 const mongoose = require( 'mongoose' )
 const cors = require( 'cors' )
@@ -8,6 +9,8 @@ const uuidv4 = require( 'uuid' ).v4;
 const path = require( 'path' );
 const PORT = process.env.PORT || 3001
 const errorHandler = require( './utils/errorHandler.js' );
+const Joi = require( 'joi' );
+
 // MongoDB connection
 const MONGODB_URI =
   'mongodb+srv://localhost:localhost@localhost.bs3q0.mongodb.net/?retryWrites=true&w=majority'
@@ -17,16 +20,20 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   } )
-  .then( () => logger( '✅ Base de données MongoDB connectée' ) )
-  .catch( ( err ) => logger( err ) )
+  .then( () => logger( '✅ BDD MongoDB connectée' ) )
+  .catch( ( err ) => logger( '❌ BDD MongoDB déconnectée : ' + err ) )
 
 const gameSettingsSchema = new mongoose.Schema( {
   maximumLives: { type: Number, default: 10 },
 } );
+
 let activeUsers = 0;
+
 const GameSettings = mongoose.model( "GameSettings", gameSettingsSchema );
 const playerSchema = new mongoose.Schema( {
-  id: { type: String, default: uuidv4 },
+  id: {
+    type: String, default: uuidv4
+  },
   name: String,
   teamID: String,
   lives: { type: Number, default: 10 },
@@ -74,18 +81,37 @@ io.on( 'connection', ( socket ) => {
 
 // API
 
-app.get( '/api/game', async ( req, res ) => {
+const fetchData = async () => {
   try {
     const players = await Player.find();
     const settings = await GameSettings.findOne();
     const teams = await Team.find();
-    res.json( { players, settings, teams } );
     // logger(` GET / game - Retrieved ${players.length} players, ${teams.length} teams, and game settings`);
+    return { players, settings, teams };
+  } catch ( err ) {
+    logger( `Error: ${err} ` );
+    throw new Error( 'Internal Server Error' );
+  }
+};
+
+app.get( '/api/game', async ( req, res ) => {
+  try {
+    const data = await fetchData();
+    res.json( data );
   } catch ( err ) {
     logger( `Error: ${err} ` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
+
+setInterval( async () => {
+  try {
+    const data = await fetchData();
+    io.emit( 'gameData', data );
+  } catch ( err ) {
+    console.error( `Error: ${err}` );
+  }
+}, 5000 );
 
 app.get( '/api/getplayers', async ( req, res ) => {
   try {
@@ -129,10 +155,9 @@ app.post( '/api/addplayer', async ( req, res ) => {
 app.post( '/api/editplayer', async ( req, res ) => {
   const { id, name, teamID } = req.body;
   try {
-    // Find the player's current team
+
     const player = await Player.findOne( { id } );
 
-    // Remove player from previous team
     const prevTeam = await Team.findOne( { id: player.teamID } );
     if ( prevTeam ) {
       prevTeam.playersInTeam = prevTeam.playersInTeam.filter( ( playerId ) => playerId !== id );
@@ -387,6 +412,8 @@ app.post( '/api/removeteam', async ( req, res ) => {
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
+
+// Game data Broadcast
 
 const routes = app._router.stack.filter( ( r ) => r.route ).map( ( r ) => r.route.path + '\n' );
 console.log( `🟨 Liste des API:\n${routes.join( '' )}` );

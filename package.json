@@ -1,11 +1,11 @@
 {
-  "name": "likely_server",
+  "name": "rtbmdr",
   "author": "Vanessa Depraute",
   "version": "1.0.0",
-  "main": "index.js",
-  "repository": "https://github.com/livee/likely_server.git",
+  "main": "server.js",
   "license": "MIT",
   "scripts": {
+    "prod": "pm2 start server.js --name rtbmdr",
     "dev": "nodemon server.js -L",
     "start": "node server.js",
     "lint": "eslint ."
@@ -23,6 +23,7 @@
     "express": "^4.18.1",
     "fakerator": "^0.3.6",
     "global": "^4.4.0",
+    "joi": "^17.9.2",
     "mongodb": "^4.13.0",
     "mongoose": "^6.8.4",
     "node-emoji": "^1.11.0",

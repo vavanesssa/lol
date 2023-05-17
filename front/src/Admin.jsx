@@ -179,9 +179,7 @@ const Admin = () => {
     fetchGameSettings();
     fetchTeams();
     fetchPlayers();
-    setInterval( () => {
-      fetchPlayers()
-    }, 10000 );
+
   }, [] );
 
   useEffect( () => {
@@ -244,8 +242,12 @@ const Admin = () => {
       fetchGameSettings();
     };
 
-    socket.connect();
+    const handleGameData = ( data ) => {
+      console.log( 'SOCKET /gameData', data );
+    };
 
+    socket.connect();
+    socket.on( 'gameData', handleGameData );
     socket.on( 'playerAdded', handlePlayerAdded );
     socket.on( 'playerRemoved', handlePlayerRemoved );
     socket.on( 'livesUpdated', handleLivesUpdated );
@@ -257,7 +259,7 @@ const Admin = () => {
 
     return () => {
       socket.disconnect();
-
+      socket.off( 'gameData', handleGameData );
       socket.off( 'playerAdded', handlePlayerAdded );
       socket.off( 'playerRemoved', handlePlayerRemoved );
       socket.off( 'livesUpdated', handleLivesUpdated );
