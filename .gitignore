@@ -1,6 +1,4 @@
 
-*.env
-
 server/public/*
 server/public/**
 # Logs
