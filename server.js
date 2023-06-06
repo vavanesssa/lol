@@ -81,12 +81,12 @@ io.on( 'connection', ( socket ) => {
 
 // API
 
-const fetchData = async () => {
+const fetchGame = async () => {
   try {
     const players = await Player.find();
-    const settings = await GameSettings.findOne();
     const teams = await Team.find();
-    // logger(` GET / game - Retrieved ${players.length} players, ${teams.length} teams, and game settings`);
+    const settings = await GameSettings.findOne();
+
     return { players, settings, teams };
   } catch ( err ) {
     logger( `Error: ${err} ` );
@@ -94,30 +94,42 @@ const fetchData = async () => {
   }
 };
 
-app.get( '/api/game', async ( req, res ) => {
+app.get( '/api/getgame', async ( req, res ) => {
   try {
-    const data = await fetchData();
-    res.json( data );
+    const players = await Player.find();
+    const teams = await Team.find();
+    const settings = await GameSettings.findOne();
+
+    res.json( {
+      players: players,
+      teams: teams,
+      settings: settings
+    } );
+    logger( 'GET /getgame - Retrieved game data' );
   } catch ( err ) {
-    logger( `Error: ${err} ` );
+    logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
   }
 } );
 
-setInterval( async () => {
+const updateGame = async () => {
   try {
-    const data = await fetchData();
-    io.emit( 'gameData', data );
+    const data = await fetchGame();
+    io.emit( "updateGame", data )
   } catch ( err ) {
     console.error( `Error: ${err}` );
   }
-}, 5000 );
+}
+
+setInterval( async () => {
+  updateGame();
+}, 2000 );
 
 app.get( '/api/getplayers', async ( req, res ) => {
   try {
     const players = await Player.find();
     res.json( players );
-    // logger( ` GET / getplayers - Retrieved ${players.length} players ` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err} ` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -131,6 +143,7 @@ app.get( '/api/getplayers/:playerid', async ( req, res ) => {
       id: req.params.playerid,
     } );
     res.json( player );
+    updateGame();
   } catch ( err ) {
     logger( err );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -146,6 +159,7 @@ app.post( '/api/addplayer', async ( req, res ) => {
     io.emit( 'playerAdded', newPlayer );
     res.json( newPlayer );
     logger( `POST /addplayer - Added player: ${name}` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -155,9 +169,7 @@ app.post( '/api/addplayer', async ( req, res ) => {
 app.post( '/api/editplayer', async ( req, res ) => {
   const { id, name, teamID } = req.body;
   try {
-
     const player = await Player.findOne( { id } );
-
     const prevTeam = await Team.findOne( { id: player.teamID } );
     if ( prevTeam ) {
       prevTeam.playersInTeam = prevTeam.playersInTeam.filter( ( playerId ) => playerId !== id );
@@ -184,6 +196,7 @@ app.post( '/api/editplayer', async ( req, res ) => {
 
     res.json( updatedPlayer );
     logger( `POST /editplayer - Updated player: ${name} ` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -205,6 +218,7 @@ app.post( '/api/removeplayer', async ( req, res ) => {
 
     res.json( player );
     logger( `POST /removeplayer - Removed player: ${player.name}` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -222,6 +236,7 @@ app.post( '/api/updateteam', async ( req, res ) => {
     );
     io.emit( 'teamUpdated', player );
     res.json( player );
+    updateGame();
   } catch ( err ) {
     logger( err );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -239,6 +254,7 @@ app.post( "/api/removelive", async ( req, res ) => {
     }
     res.json( player );
     logger( `POST /removelive - Removed live from ${player.name} , lives left: ${player.lives}` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -257,6 +273,7 @@ app.post( "/api/addlive", async ( req, res ) => {
     }
     res.json( player );
     logger( `POST / addlive - Added live to ${player.name} , lives left: ${player.lives} ` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err} ` );
     return res.status( 500 ).json( { error: "Internal Server Error" } );
@@ -272,6 +289,7 @@ app.get( "/api/getsettings", async ( req, res ) => {
       await settings.save();
     }
     res.json( settings );
+    updateGame();
   } catch ( err ) {
     logger( err );
     return res.status( 500 ).json( { error: "Internal Server Error" } );
@@ -290,6 +308,7 @@ app.post( "/api/updatesettings", async ( req, res ) => {
     res.json( settings );
     io.emit( "updateSettings" );
     logger( `POST /updatesettings - maximumLives set to ${maximumLives}` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err}` )
     return res.status( 500 ).json( { error: "Internal Server Error" } );
@@ -304,6 +323,7 @@ app.post( '/api/resetlives', async ( req, res ) => {
     const players = await Player.find();
     io.emit( 'playersReset', players );
     res.json( players );
+    updateGame();
   } catch ( err ) {
     logger( err );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -312,14 +332,12 @@ app.post( '/api/resetlives', async ( req, res ) => {
 
 app.post( '/editplayer', ( req, res ) => {
   const { id, name } = req.body;
-
   const playerIndex = players.findIndex( ( player ) => player.id === id );
-
   if ( playerIndex !== -1 ) {
     players[ playerIndex ].name = name;
   }
-
   res.json( { success: true } );
+  updateGame();
 } );
 
 // TEAMS
@@ -333,6 +351,7 @@ app.post( '/api/addteam', async ( req, res ) => {
     io.emit( 'teamAdded', newTeam );
     res.json( newTeam );
     logger( `POST /addTeam - Added Team: ${name}` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -359,6 +378,7 @@ app.get( '/api/getteams', async ( req, res ) => {
     const teams = await Team.find();
     res.json( teams );
     // logger( `GET /getteams - Retrieved ${teams.length} teams` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -372,6 +392,7 @@ app.get( '/api/getteams/:teamid', async ( req, res ) => {
       id: req.params.teamid,
     } );
     res.json( team );
+    updateGame();
   } catch ( err ) {
     logger( err );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -390,6 +411,7 @@ app.post( '/api/editteam', async ( req, res ) => {
     io.emit( 'teamUpdated', team );
     res.json( team );
     logger( `POST /editteam - Updated team: ${name}` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
@@ -407,6 +429,7 @@ app.post( '/api/removeteam', async ( req, res ) => {
 
     res.json( team );
     logger( `POST /removeteam - Removed team: ${team.name}` );
+    updateGame();
   } catch ( err ) {
     logger( `Error: ${err}` );
     return res.status( 500 ).json( { error: 'Internal Server Error' } );
